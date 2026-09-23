@@ -24,6 +24,7 @@
         <button data-menu="campaign" class="primary">START CAMPAIGN</button>
         <button data-menu="levels">LEVEL SELECT</button>
         <button data-menu="settings">SETTINGS</button>
+        <button id="install-app" hidden>INSTALL APP</button>
       </div>
       <p class="menu-help">A/D move · SPACE jump · hold click/X hook · C bubble · R restart · ESC menu</p>
       <p class="menu-help gamepad-help">GAMEPAD: LS move · RS aim · A jump · RT hook · X bubble</p>
@@ -57,6 +58,21 @@
         <div><span>RESTART</span><button data-bind="restart"></button></div>
       </div>
       <button data-back>BACK</button>
+    </section>
+
+    <section id="results" class="panel results-panel" aria-label="Campaign results">
+      <div class="panel-title">CAMPAIGN COMPLETE</div>
+      <div class="result-mark">@</div>
+      <div class="result-stats">
+        <div><span>TIME</span><b id="result-time">--:--.---</b></div>
+        <div><span>DEATHS</span><b id="result-deaths">×0</b></div>
+        <div><span>RECORD</span><b id="result-record">--:--.---</b></div>
+      </div>
+      <p id="result-message" class="result-message"></p>
+      <div class="result-actions">
+        <button id="results-replay" class="primary">RUN AGAIN</button>
+        <button id="results-back">BACK TO MENU</button>
+      </div>
     </section>
 
     <div id="toast" role="status"></div>
