@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#030609" />
+    <meta name="description" content="Glyphhook — a minimalist ASCII grappling platformer." />
+    <title>Glyphhook</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game" aria-label="Glyphhook game canvas"></canvas>
+      <div id="mobile-controls" aria-label="Touch controls">
+        <div class="move-pad">
+          <button data-control="left" aria-label="Move left">◀</button>
+          <button data-control="right" aria-label="Move right">▶</button>
+        </div>
+        <div class="action-pad">
+          <button data-control="jump" aria-label="Jump">JUMP</button>
+          <button data-control="hook" class="primary" aria-label="Hook">HOOK</button>
+          <button data-control="bubble" aria-label="Bubble">BUBBLE</button>
+        </div>
+      </div>
+      <div id="rotate-hint">Landscape works best on mobile.</div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
