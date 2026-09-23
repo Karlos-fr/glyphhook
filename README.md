@@ -2,6 +2,21 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.3.1 — Playability & Polish
+
+This pass hardens the existing game instead of adding a new gameplay system.
+
+- Real pause/resume flow; `Esc` pauses instead of quitting
+- Mobile Pause button and automatic pause when the app goes to the background
+- Progressive Movement Lab tutorial driven by actual player actions
+- Mobile Hook can stay held while the player aims; it retries anchor acquisition until a valid target exists
+- Rope pivot hysteresis reduces corner wrap/unwrap chatter
+- Visible hook range and candidate guide
+- Active checkpoint marker and Bubble cooldown percentage
+- Optional `F3` debug overlay with FPS, position, velocity, speed, rope length, pivots and anchor
+- Structural level validation at startup
+- PWA cache versioned to v0.3.1 with no-cache service-worker update checks
+
 ## v0.3 — Game Feel
 
 Glyphhook uses a deterministic 120 Hz custom physics loop. The v0.3 pass focuses on movement quality, readable aiming, rope/world interaction, progression, mobile play and offline installation.
@@ -38,7 +53,8 @@ Defaults are rebindable in Settings.
 - `W` / `S`: reel rope in/out
 - `C`: bubble
 - `R`: restart current level
-- `Esc`: menu
+- `Esc`: pause/resume
+- `F3`: toggle developer debug overlay
 
 ### Gamepad
 
