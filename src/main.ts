@@ -157,7 +157,10 @@ document.querySelector('[data-menu="settings"]')?.addEventListener('click', () =
   settingsReturnPanel = menu;
   show(settingsPanel);
 });
-document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => show(settingsReturnPanel)));
+document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => {
+  if (button.closest('#settings')) show(settingsReturnPanel);
+  else show(menu);
+}));
 
 document.querySelector('#pause-resume')?.addEventListener('click', () => {
   game.resume();
