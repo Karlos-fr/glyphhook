@@ -163,18 +163,33 @@ export class Player {
     const aim = { x: input.aim.x + camera.x, y: input.aim.y + camera.y };
     let best: Vec2 | null = null;
     let bestScore = Infinity;
+    let assistBest: Vec2 | null = null;
+    let assistScore = Infinity;
+
     for (const anchor of world.anchors) {
       const playerDistance = dist(this.pos, anchor);
       if (playerDistance > P.hookRange || !lineClear(world, this.pos, anchor)) continue;
+
       const dot = dirDot(anchor.x - this.pos.x, anchor.y - this.pos.y, aim.x - this.pos.x, aim.y - this.pos.y);
-      if (dot < P.hookAimCone) continue;
       const score = dist(aim, anchor) * P.hookAimWeight + playerDistance * P.hookDistanceWeight + (1 - dot) * 130;
-      if (score < bestScore) {
+
+      if (dot >= P.hookAimCone && score < bestScore) {
         best = anchor;
         bestScore = score;
       }
+
+      if (input.touchHookAssist) {
+        const belowPenalty = anchor.y > this.pos.y + 28 ? 150 : 0;
+        const sidePenalty = Math.abs(anchor.x - this.pos.x) * 0.06;
+        const assist = playerDistance + belowPenalty + sidePenalty + (1 - dot) * 28;
+        if (assist < assistScore) {
+          assistBest = anchor;
+          assistScore = assist;
+        }
+      }
     }
-    return best;
+
+    return best ?? assistBest;
   }
 
   private tryHook(world: World, input: Input, camera: Vec2) {
