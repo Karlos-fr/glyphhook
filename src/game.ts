@@ -172,6 +172,11 @@ export class GlyphhookGame extends EventTarget {
         this.showMenu();
         return;
       }
+      if (e.code === 'KeyR' && this.mode === 'playing') {
+        e.preventDefault();
+        this.startLevel(this.levelIndex);
+        return;
+      }
       const action = keys.get(e.code);
       if (action) {
         e.preventDefault();
