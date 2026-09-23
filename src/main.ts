@@ -80,10 +80,15 @@ game.addEventListener('finish', (event) => {
 const fullscreen = document.querySelector<HTMLButtonElement>('#fullscreen')!;
 fullscreen.addEventListener('click', async () => {
   try {
-    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-    else await document.exitFullscreen();
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      const orientation = screen.orientation as unknown as { lock?: (mode: string) => Promise<void> };
+      await orientation.lock?.('landscape').catch(() => undefined);
+    } else {
+      await document.exitFullscreen();
+    }
   } catch {
-    // Fullscreen is optional and not exposed by every mobile browser.
+    // Fullscreen/orientation lock are optional and not exposed by every mobile browser.
   }
 });
 
