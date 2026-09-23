@@ -4,17 +4,33 @@ import type { Player } from '../gameplay/player';
 import { tileAt, type World } from '../gameplay/world';
 import type { GhostPoint, Settings } from '../storage';
 
-const C = {
+const BASE = {
   bg: '#030609', wall: '#39458f', wall2: '#1b2358', player: '#31ff6a', anchor: '#ffd969',
-  hazard: '#ff5858', checkpoint: '#61ff98', exit: '#c563ff', rope: '#d6945e', bubble: '#58ebff',
-  ui: '#42d9ff', dim: '#39545c', star: '#17232f', aim: '#657581', ghost: 'rgba(49,255,106,.28)', text: '#6d8892',
+  anchorTarget: '#fff2a9', hazard: '#ff5858', checkpoint: '#61ff98', exit: '#c563ff', rope: '#d6945e',
+  bubble: '#58ebff', ui: '#42d9ff', dim: '#39545c', star: '#17232f', aim: '#657581',
+  ghost: 'rgba(49,255,106,.28)', text: '#6d8892', particle: '#c9f8ff',
 };
+const HIGH = {
+  ...BASE,
+  bg: '#000000', wall: '#6577ff', wall2: '#3243b8', player: '#54ff72', anchor: '#ffe14a',
+  hazard: '#ff3c3c', checkpoint: '#68ffb1', exit: '#f184ff', ui: '#64efff', dim: '#8da0a8',
+  aim: '#d0d8dc', text: '#b7c8cd',
+};
+
+type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; glyph: string; color: string };
+type TrailPoint = { x: number; y: number; life: number };
 
 export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
   private dpr = 1;
+  private zoom = 1;
+  screen: Vec2 = { x: 0, y: 0 };
   view: Vec2 = { x: 0, y: 0 };
   private stars: Vec2[];
+  private particles: Particle[] = [];
+  private trail: TrailPoint[] = [];
+  private shakePower = 0;
+  private time = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
@@ -26,104 +42,240 @@ export class AsciiRenderer {
 
   resize() {
     const r = this.canvas.getBoundingClientRect();
-    this.view = { x: Math.max(320, r.width), y: Math.max(240, r.height) };
+    this.screen = { x: Math.max(320, r.width), y: Math.max(240, r.height) };
+    this.zoom = clampZoom(Math.min(this.screen.x / 1100, this.screen.y / 620));
+    this.view = { x: this.screen.x / this.zoom, y: this.screen.y / this.zoom };
     this.dpr = Math.min(devicePixelRatio || 1, 2);
-    this.canvas.width = Math.round(this.view.x * this.dpr);
-    this.canvas.height = Math.round(this.view.y * this.dpr);
+    this.canvas.width = Math.round(this.screen.x * this.dpr);
+    this.canvas.height = Math.round(this.screen.y * this.dpr);
   }
 
-  render(world: World, player: Player, camera: Vec2, aim: Vec2, runMs: number, bestMs: number | undefined, settings: Settings, ghost: GhostPoint[] | undefined, clearText = '') {
-    const g = this.ctx;
-    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    g.fillStyle = C.bg;
-    g.fillRect(0, 0, this.view.x, this.view.y);
-    this.drawStars(g, camera);
+  screenToView(p: Vec2): Vec2 {
+    return { x: p.x / this.zoom, y: p.y / this.zoom };
+  }
 
-    g.save();
-    g.translate(-Math.round(camera.x), -Math.round(camera.y));
-    this.drawWorld(g, world, camera);
-    if (settings.ghost && ghost?.length) this.drawGhost(g, ghost, runMs);
-    this.drawRope(g, player);
-    this.drawBubble(g, player);
-    this.glyph(g, '@', player.pos, C.player, true);
-    g.restore();
+  kickShake(power: number, settings: Settings) {
+    if (!settings.reducedMotion && settings.screenShake) this.shakePower = Math.max(this.shakePower, power);
+  }
 
-    this.drawAim(g, aim);
-    if (settings.speedrunHud) this.drawHud(g, world, player, runMs, bestMs);
-    if (clearText) {
-      g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = 'bold 22px ui-monospace,Menlo,Consolas,monospace'; g.fillStyle = C.player;
-      g.fillText(clearText, this.view.x / 2, this.view.y / 2);
+  burst(pos: Vec2, color: string, count: number, speed: number, settings: Settings, glyph = '·') {
+    if (settings.reducedMotion) return;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.45;
+      const force = speed * (0.55 + Math.random() * 0.55);
+      this.particles.push({
+        x: pos.x, y: pos.y,
+        vx: Math.cos(angle) * force,
+        vy: Math.sin(angle) * force,
+        life: 0.35 + Math.random() * 0.25,
+        max: 0.6,
+        glyph,
+        color,
+      });
     }
   }
 
-  private drawWorld(g: CanvasRenderingContext2D, world: World, camera: Vec2) {
+  stepEffects(dt: number, player: Player, settings: Settings) {
+    this.time += dt;
+    this.shakePower = Math.max(0, this.shakePower - dt * 24);
+    for (const p of this.particles) {
+      p.life -= dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 220 * dt;
+      p.vx *= 0.985;
+    }
+    this.particles = this.particles.filter((p) => p.life > 0);
+
+    if (!settings.reducedMotion && player.speed > P.highSpeedTrail) {
+      this.trail.push({ x: player.pos.x, y: player.pos.y, life: 0.22 });
+    }
+    for (const t of this.trail) t.life -= dt;
+    this.trail = this.trail.filter((t) => t.life > 0).slice(-18);
+  }
+
+  render(
+    world: World,
+    player: Player,
+    camera: Vec2,
+    aim: Vec2,
+    runMs: number,
+    bestMs: number | undefined,
+    settings: Settings,
+    ghost: GhostPoint[] | undefined,
+    clearText = '',
+    introText = '',
+    campaignText = '',
+  ) {
+    const C = settings.highContrast ? HIGH : BASE;
+    const g = this.ctx;
+    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    g.fillStyle = C.bg;
+    g.fillRect(0, 0, this.screen.x, this.screen.y);
+
+    const shake = this.shakePower > 0 && !settings.reducedMotion
+      ? { x: (Math.random() - 0.5) * this.shakePower, y: (Math.random() - 0.5) * this.shakePower }
+      : { x: 0, y: 0 };
+
+    g.save();
+    g.setTransform(this.dpr * this.zoom, 0, 0, this.dpr * this.zoom, shake.x * this.dpr, shake.y * this.dpr);
+    g.translate(-Math.round(camera.x), -Math.round(camera.y));
+    this.drawStars(g, camera, C);
+    this.drawWorld(g, world, camera, player, C);
+    if (settings.ghost && ghost?.length) this.drawGhost(g, ghost, runMs, C);
+    this.drawTrail(g, C);
+    this.drawRope(g, player, C);
+    this.drawParticles(g);
+    this.drawBubble(g, player, C);
+    this.drawPlayer(g, player, C);
+    g.restore();
+
+    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.drawAim(g, aim, C);
+    if (settings.speedrunHud) this.drawHud(g, world, player, runMs, bestMs, campaignText, C);
+    if (introText) this.drawCenterText(g, introText, C.ui, 16, this.screen.y * 0.22);
+    if (clearText) this.drawCenterText(g, clearText, C.player, 22, this.screen.y * 0.5);
+  }
+
+  private drawWorld(g: CanvasRenderingContext2D, world: World, camera: Vec2, player: Player, C: typeof BASE) {
     g.font = `bold ${P.cell}px ui-monospace,Menlo,Consolas,monospace`;
-    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
     const x0 = Math.max(0, Math.floor(camera.x / P.cell) - 1);
     const x1 = Math.min(world.width - 1, Math.ceil((camera.x + this.view.x) / P.cell) + 1);
     const y0 = Math.max(0, Math.floor(camera.y / P.cell) - 1);
     const y1 = Math.min(world.height - 1, Math.ceil((camera.y + this.view.y) / P.cell) + 1);
+
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      const t = tileAt(world, x, y);
+      const tile = tileAt(world, x, y);
       const p = { x: x * P.cell + P.cell / 2, y: y * P.cell + P.cell / 2 + 1 };
-      if (t === '#') this.glyph(g, '#', p, (x + y) % 2 ? C.wall : C.wall2);
-      else if (t === 'o') this.glyph(g, 'O', p, C.anchor);
-      else if (t === '^') this.glyph(g, '^', p, C.hazard);
-      else if (t === '!') this.glyph(g, '!', p, C.checkpoint);
-      else if (t === 'E') this.glyph(g, 'E', p, C.exit);
-      else if (t !== '.' && t !== '@') this.glyph(g, t, p, C.text);
+      if (tile === '#') this.glyph(g, '#', p, (x + y) % 2 ? C.wall : C.wall2);
+      else if (tile === 'o') {
+        const selected = player.candidateAnchor && dist(player.candidateAnchor, p) < 2;
+        this.glyph(g, selected ? '◎' : 'O', p, selected ? C.anchorTarget : C.anchor, selected);
+      }
+      else if (tile === '^') this.glyph(g, '^', p, C.hazard);
+      else if (tile === '!') this.glyph(g, '!', p, C.checkpoint);
+      else if (tile === 'E') this.glyph(g, 'E', p, C.exit, true);
+      else if (tile !== '.' && tile !== '@') this.glyph(g, tile, p, C.text);
     }
   }
 
-  private drawRope(g: CanvasRenderingContext2D, player: Player) {
+  private drawRope(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
     if (!player.anchor) return;
-    const n = Math.max(2, Math.floor(dist(player.pos, player.anchor) / 10));
-    g.font = '11px monospace'; g.fillStyle = C.rope;
-    for (let i = 1; i < n; i++) {
-      const t = i / n;
-      g.fillText(i % 2 ? '·' : '-', lerp(player.pos.x, player.anchor.x, t), lerp(player.pos.y, player.anchor.y, t));
+    const points = [player.pos, ...player.ropePoints];
+    g.font = '11px monospace';
+    g.fillStyle = C.rope;
+    for (let s = 0; s < points.length - 1; s++) {
+      const a = points[s], b = points[s + 1];
+      const n = Math.max(2, Math.floor(dist(a, b) / 9));
+      for (let i = 1; i < n; i++) {
+        const t = i / n;
+        g.fillText((i + s) % 2 ? '·' : '-', lerp(a.x, b.x, t), lerp(a.y, b.y, t));
+      }
     }
+    for (const pivot of player.ropePivots) this.glyph(g, '+', pivot, C.rope, true);
   }
 
-  private drawBubble(g: CanvasRenderingContext2D, player: Player) {
-    if (player.bubbleFx <= 0) return;
-    const q = player.bubbleFx / 0.26;
-    g.font = `bold ${P.cell}px monospace`; g.fillStyle = C.bubble;
-    g.fillText('□', player.bubblePos.x, player.bubblePos.y + (1 - q) * 12);
-    g.globalAlpha = Math.max(0, q * 0.65);
-    g.fillText('·', player.bubblePos.x - 9, player.bubblePos.y + 4);
-    g.fillText('·', player.bubblePos.x + 9, player.bubblePos.y - 3);
+  private drawTrail(g: CanvasRenderingContext2D, C: typeof BASE) {
+    g.font = `bold ${P.cell}px monospace`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    for (const t of this.trail) {
+      g.globalAlpha = Math.max(0, t.life / 0.22) * 0.22;
+      g.fillStyle = C.player;
+      g.fillText('@', t.x, t.y);
+    }
     g.globalAlpha = 1;
   }
 
-  private drawGhost(g: CanvasRenderingContext2D, ghost: GhostPoint[], runMs: number) {
+  private drawParticles(g: CanvasRenderingContext2D) {
+    g.font = 'bold 13px monospace';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    for (const p of this.particles) {
+      g.globalAlpha = Math.min(1, p.life / p.max);
+      g.fillStyle = p.color;
+      g.fillText(p.glyph, p.x, p.y);
+    }
+    g.globalAlpha = 1;
+  }
+
+  private drawBubble(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
+    if (player.bubbleFx <= 0) return;
+    const q = player.bubbleFx / 0.25;
+    g.font = `bold ${P.cell}px monospace`;
+    g.fillStyle = C.bubble;
+    g.fillText('□', player.bubblePos.x, player.bubblePos.y + (1 - q) * 12);
+  }
+
+  private drawPlayer(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
+    const bob = player.grounded ? 0 : Math.sin(this.time * 18) * 0.5;
+    const glyph = player.anchor ? '@' : player.speed > P.highSpeedTrail ? '＠' : '@';
+    this.glyph(g, glyph, { x: player.pos.x, y: player.pos.y + bob }, C.player, true);
+  }
+
+  private drawGhost(g: CanvasRenderingContext2D, ghost: GhostPoint[], runMs: number, C: typeof BASE) {
     let i = 1;
     while (i < ghost.length && ghost[i].t < runMs) i++;
     if (i >= ghost.length) return;
     const a = ghost[Math.max(0, i - 1)], b = ghost[i];
     const u = b.t === a.t ? 0 : (runMs - a.t) / (b.t - a.t);
-    g.font = `bold ${P.cell}px monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillStyle = C.ghost; g.fillText('@', lerp(a.x, b.x, u), lerp(a.y, b.y, u));
+    g.font = `bold ${P.cell}px monospace`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = C.ghost;
+    g.fillText('@', lerp(a.x, b.x, u), lerp(a.y, b.y, u));
   }
 
-  private drawAim(g: CanvasRenderingContext2D, aim: Vec2) {
-    g.strokeStyle = C.aim; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(aim.x - 5, aim.y); g.lineTo(aim.x + 5, aim.y); g.moveTo(aim.x, aim.y - 5); g.lineTo(aim.x, aim.y + 5); g.stroke();
+  private drawAim(g: CanvasRenderingContext2D, aim: Vec2, C: typeof BASE) {
+    const x = aim.x * this.zoom;
+    const y = aim.y * this.zoom;
+    g.strokeStyle = C.aim;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(x - 6, y); g.lineTo(x + 6, y);
+    g.moveTo(x, y - 6); g.lineTo(x, y + 6);
+    g.stroke();
   }
 
-  private drawHud(g: CanvasRenderingContext2D, world: World, player: Player, runMs: number, bestMs?: number) {
-    g.font = 'bold 12px ui-monospace,Menlo,Consolas,monospace'; g.textBaseline = 'top'; g.textAlign = 'left';
+  private drawHud(
+    g: CanvasRenderingContext2D,
+    world: World,
+    player: Player,
+    runMs: number,
+    bestMs: number | undefined,
+    campaignText: string,
+    C: typeof BASE,
+  ) {
+    g.font = 'bold 12px ui-monospace,Menlo,Consolas,monospace';
+    g.textBaseline = 'top';
+    g.textAlign = 'left';
     g.fillStyle = C.ui;
-    g.fillText(`A/D MOVE  SPACE JUMP  ${player.anchor ? '[HOOK]' : ' HOOK '}  ${player.bubbleReady ? 'BUBBLE' : '.....'}`, 14, 12);
-    g.fillStyle = C.dim; g.fillText(world.def.name, 14, 30);
+    g.fillText(`MOVE  JUMP  ${player.anchor ? '[HOOK]' : player.candidateAnchor ? '<HOOK>' : ' HOOK '}  ${player.bubbleReady ? 'BUBBLE' : '.....'}`, 14, 12);
+    g.fillStyle = C.dim;
+    g.fillText(`${world.def.name} · ${world.def.mechanic}`, 14, 30);
+    if (campaignText) g.fillText(campaignText, 14, 48);
     g.textAlign = 'right';
-    g.fillText(`${formatMs(runMs)}${bestMs !== undefined ? `  BEST ${formatMs(bestMs)}` : ''}  ×${player.deaths}`, this.view.x - 14, 12);
+    g.fillText(`${formatMs(runMs)}${bestMs !== undefined ? `  BEST ${formatMs(bestMs)}` : ''}  ×${player.deaths}`, this.screen.x - 14, 12);
   }
 
-  private drawStars(g: CanvasRenderingContext2D, camera: Vec2) {
-    g.font = '12px monospace'; g.fillStyle = C.star;
-    for (const s of this.stars) g.fillText('.', mod(s.x - camera.x * 0.08, this.view.x + 30) - 15, mod(s.y - camera.y * 0.08, this.view.y + 30) - 15);
+  private drawStars(g: CanvasRenderingContext2D, camera: Vec2, C: typeof BASE) {
+    g.font = '12px monospace';
+    g.fillStyle = C.star;
+    const width = this.view.x + 30;
+    const height = this.view.y + 30;
+    for (const s of this.stars) {
+      g.fillText('.', camera.x + mod(s.x - camera.x * 0.08, width) - 15, camera.y + mod(s.y - camera.y * 0.08, height) - 15);
+    }
+  }
+
+  private drawCenterText(g: CanvasRenderingContext2D, text: string, color: string, size: number, y: number) {
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = `bold ${size}px ui-monospace,Menlo,Consolas,monospace`;
+    g.fillStyle = color;
+    g.fillText(text, this.screen.x / 2, y);
   }
 
   private glyph(g: CanvasRenderingContext2D, ch: string, p: Vec2, color: string, glow = false) {
@@ -136,8 +288,12 @@ export class AsciiRenderer {
   private makeStars() {
     let s = 0x47594c50;
     const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 0xffffffff);
-    return Array.from({ length: 120 }, () => ({ x: rnd() * 1800, y: rnd() * 1000 }));
+    return Array.from({ length: 150 }, () => ({ x: rnd() * 2200, y: rnd() * 1300 }));
   }
+}
+
+function clampZoom(v: number) {
+  return Math.max(1, Math.min(1.55, v));
 }
 
 export function formatMs(ms: number) {
