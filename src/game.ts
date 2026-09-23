@@ -6,10 +6,11 @@ import { clamp, type Vec2 } from './engine/math';
 import { Player } from './gameplay/player';
 import { makeWorld, type World } from './gameplay/world';
 import { LEVELS } from './levels/index';
+import { validateLevels } from './levels/validate';
 import { AsciiRenderer, formatMs, rankFor } from './rendering/asciiRenderer';
 import { SaveStore, type BindableAction, type GhostPoint } from './storage';
 
-export type GameMode = 'menu' | 'playing' | 'clear';
+export type GameMode = 'menu' | 'playing' | 'paused' | 'clear';
 
 export class GlyphhookGame extends EventTarget {
   readonly save = new SaveStore();
@@ -33,9 +34,11 @@ export class GlyphhookGame extends EventTarget {
   private campaign = false;
   private campaignMs = 0;
   private campaignDeaths = 0;
+  private tutorialStep = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     super();
+    validateLevels(LEVELS);
     this.renderer = new AsciiRenderer(canvas);
     this.applySettings();
     this.player.reset(this.world);
@@ -48,11 +51,38 @@ export class GlyphhookGame extends EventTarget {
   getMode() { return this.mode; }
   isCampaign() { return this.campaign; }
 
+  pause() {
+    if (this.mode !== 'playing') return;
+    this.mode = 'paused';
+    this.audio.setAmbient(false);
+    this.input.clearSource('keyboard');
+    this.input.clearSource('pointer');
+    this.input.clearSource('gamepad');
+    this.input.touchAnalogX = 0;
+    this.dispatchEvent(new CustomEvent('mode', { detail: { mode: this.mode } }));
+  }
+
+  resume() {
+    if (this.mode !== 'paused') return;
+    this.mode = 'playing';
+    this.audio.setAmbient(this.save.data.settings.music);
+    this.dispatchEvent(new CustomEvent('mode', { detail: { mode: this.mode } }));
+  }
+
+  togglePause() {
+    if (this.mode === 'playing') this.pause();
+    else if (this.mode === 'paused') this.resume();
+  }
+
   showMenu() {
     this.mode = 'menu';
     this.campaign = false;
     this.audio.setAmbient(false);
     this.input.clearTransient();
+    this.input.clearSource('keyboard');
+    this.input.clearSource('pointer');
+    this.input.clearSource('gamepad');
+    this.input.touchAnalogX = 0;
     this.dispatchEvent(new CustomEvent('mode', { detail: { mode: this.mode } }));
   }
 
@@ -69,7 +99,7 @@ export class GlyphhookGame extends EventTarget {
   }
 
   restartLevel() {
-    if (this.mode === 'playing') this.loadLevel(this.levelIndex, this.campaign);
+    if (this.mode === 'playing' || this.mode === 'paused') this.loadLevel(this.levelIndex, this.campaign);
   }
 
   updateSettings() {
@@ -97,12 +127,14 @@ export class GlyphhookGame extends EventTarget {
     this.clearTimer = 0;
     this.introTimer = 1.5;
     this.clearText = '';
+    this.tutorialStep = 0;
     this.ghostRun = [{ t: 0, x: this.player.pos.x, y: this.player.pos.y }];
     this.ghostSample = 0;
     this.mode = 'playing';
     this.audio.setAmbient(this.save.data.settings.music);
     if (!this.input.aimed) this.input.aim = { x: this.renderer.view.x * 0.7, y: this.renderer.view.y * 0.35 };
     this.dispatchEvent(new CustomEvent('mode', { detail: { mode: this.mode } }));
+    this.emitTutorial();
   }
 
   private frame(t: number) {
@@ -138,7 +170,7 @@ export class GlyphhookGame extends EventTarget {
     this.renderer.stepEffects(dt, this.player, this.save.data.settings);
     this.introTimer = Math.max(0, this.introTimer - dt);
 
-    if (this.mode === 'menu') return;
+    if (this.mode === 'menu' || this.mode === 'paused') return;
 
     if (this.mode === 'clear') {
       this.clearTimer -= dt;
@@ -154,6 +186,7 @@ export class GlyphhookGame extends EventTarget {
     }
 
     const ev = this.player.update(this.world, this.input, this.camera, dt);
+    this.updateTutorial(ev);
     if (ev.jumped) {
       this.audio.beep(330, 0.035, 0.018, 'square', 45);
       this.renderer.burst(this.player.pos, '#61ff98', 3, 35, this.save.data.settings);
@@ -202,6 +235,49 @@ export class GlyphhookGame extends EventTarget {
     const f = this.save.data.settings.reducedMotion ? 1 : 1 - Math.exp(-P.cameraLag * dt);
     this.camera.x += (targetX - this.camera.x) * f;
     this.camera.y += (targetY - this.camera.y) * f;
+  }
+
+  private updateTutorial(ev: { jumped: boolean; hooked: boolean; released: boolean; bubbled: boolean }) {
+    if (!this.world.def.training || this.tutorialStep >= 6) return;
+
+    let advance = false;
+    if (this.tutorialStep === 0) {
+      advance = Math.abs(this.input.analogX) > 0.25 || this.input.has('left') || this.input.has('right');
+    } else if (this.tutorialStep === 1) {
+      advance = ev.jumped;
+    } else if (this.tutorialStep === 2) {
+      advance = this.input.aimed && Boolean(this.player.candidateAnchor);
+    } else if (this.tutorialStep === 3) {
+      advance = ev.hooked;
+    } else if (this.tutorialStep === 4) {
+      advance = ev.released;
+    } else if (this.tutorialStep === 5) {
+      advance = ev.bubbled;
+    }
+
+    if (advance) {
+      this.tutorialStep++;
+      this.emitTutorial();
+    }
+  }
+
+  private emitTutorial() {
+    if (!this.world.def.training || this.mode === 'menu') {
+      this.dispatchEvent(new CustomEvent('tutorial', { detail: { text: '', step: -1 } }));
+      return;
+    }
+    const steps = [
+      '1/6  MOVE  — use A/D, arrows, stick or gamepad',
+      '2/6  JUMP  — press Space / JUMP / gamepad A',
+      '3/6  AIM  — point toward a highlighted anchor',
+      '4/6  HOLD HOOK  — keep it held and start swinging',
+      '5/6  RELEASE  — let go while moving upward/forward',
+      '6/6  BUBBLE  — use the impulse to correct your arc',
+      'TRAINING COMPLETE  — reach E when you are ready',
+    ];
+    this.dispatchEvent(new CustomEvent('tutorial', {
+      detail: { text: steps[Math.min(this.tutorialStep, steps.length - 1)], step: this.tutorialStep },
+    }));
   }
 
   private finishLevel() {
@@ -266,7 +342,13 @@ export class GlyphhookGame extends EventTarget {
     addEventListener('keydown', (e) => {
       if (e.code === 'Escape') {
         e.preventDefault();
-        this.showMenu();
+        this.togglePause();
+        return;
+      }
+      if (e.code === 'F3') {
+        e.preventDefault();
+        this.save.data.settings.debugOverlay = !this.save.data.settings.debugOverlay;
+        this.updateSettings();
         return;
       }
       if (e.code === this.save.data.bindings.restart && this.mode === 'playing') {
