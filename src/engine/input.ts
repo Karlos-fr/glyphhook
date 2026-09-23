@@ -14,6 +14,7 @@ export class Input {
   aimed = false;
   touchAnalogX = 0;
   gamepadAnalogX = 0;
+  touchHookAssist = false;
 
   get analogX() {
     return Math.abs(this.gamepadAnalogX) > 0.12 ? this.gamepadAnalogX : this.touchAnalogX;
