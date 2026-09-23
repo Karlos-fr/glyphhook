@@ -1,0 +1,19 @@
+{
+  "name": "Glyphhook",
+  "short_name": "Glyphhook",
+  "description": "A minimalist ASCII grappling platformer focused on momentum and precision.",
+  "start_url": "/glyphhook/",
+  "scope": "/glyphhook/",
+  "display": "fullscreen",
+  "orientation": "landscape-primary",
+  "background_color": "#030609",
+  "theme_color": "#030609",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

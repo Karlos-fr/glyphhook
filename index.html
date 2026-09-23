@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
   <meta name="theme-color" content="#030609" />
   <meta name="description" content="Glyphhook — a minimalist ASCII grappling platformer." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
   <title>Glyphhook</title>
 </head>
 <body>
@@ -14,12 +19,15 @@
     <section id="menu" class="panel visible" aria-label="Main menu">
       <div class="logo">GLYPHHOOK<span>_</span></div>
       <p class="tagline">MOMENTUM / GRAPPLE / PRECISION</p>
+      <p id="campaign-record" class="campaign-record"></p>
       <div class="menu-buttons">
-        <button data-menu="play" class="primary">PLAY</button>
+        <button data-menu="campaign" class="primary">START CAMPAIGN</button>
         <button data-menu="levels">LEVEL SELECT</button>
         <button data-menu="settings">SETTINGS</button>
+        <button id="install-app" hidden>INSTALL APP</button>
       </div>
       <p class="menu-help">A/D move · SPACE jump · hold click/X hook · C bubble · R restart · ESC menu</p>
+      <p class="menu-help gamepad-help">GAMEPAD: LS move · RS aim · A jump · RT hook · X bubble</p>
     </section>
 
     <section id="level-select" class="panel" aria-label="Level select">
@@ -28,20 +36,50 @@
       <button data-back>BACK</button>
     </section>
 
-    <section id="settings" class="panel" aria-label="Settings">
+    <section id="settings" class="panel settings-panel" aria-label="Settings">
       <div class="panel-title">SETTINGS</div>
-      <label><span>SOUND</span><input id="sound-toggle" type="checkbox" checked /></label>
-      <label><span>GHOST</span><input id="ghost-toggle" type="checkbox" checked /></label>
-      <label><span>SPEEDRUN MODE</span><input id="speedrun-toggle" type="checkbox" checked /></label>
-      <label><span>HAPTICS</span><input id="haptics-toggle" type="checkbox" checked /></label>
+      <div class="settings-grid">
+        <label><span>SOUND FX</span><input id="sound-toggle" type="checkbox" /></label>
+        <label><span>AMBIENT AUDIO</span><input id="music-toggle" type="checkbox" /></label>
+        <label><span>GHOST</span><input id="ghost-toggle" type="checkbox" /></label>
+        <label><span>SPEEDRUN HUD</span><input id="speedrun-toggle" type="checkbox" /></label>
+        <label><span>HAPTICS</span><input id="haptics-toggle" type="checkbox" /></label>
+        <label><span>SCREEN SHAKE</span><input id="shake-toggle" type="checkbox" /></label>
+        <label><span>REDUCED MOTION</span><input id="motion-toggle" type="checkbox" /></label>
+        <label><span>HIGH CONTRAST</span><input id="contrast-toggle" type="checkbox" /></label>
+      </div>
+      <div class="sub-title">KEYBOARD</div>
+      <div class="bindings">
+        <div><span>MOVE LEFT</span><button data-bind="left"></button></div>
+        <div><span>MOVE RIGHT</span><button data-bind="right"></button></div>
+        <div><span>JUMP</span><button data-bind="jump"></button></div>
+        <div><span>HOOK</span><button data-bind="hook"></button></div>
+        <div><span>BUBBLE</span><button data-bind="bubble"></button></div>
+        <div><span>RESTART</span><button data-bind="restart"></button></div>
+      </div>
       <button data-back>BACK</button>
+    </section>
+
+    <section id="results" class="panel results-panel" aria-label="Campaign results">
+      <div class="panel-title">CAMPAIGN COMPLETE</div>
+      <div class="result-mark">@</div>
+      <div class="result-stats">
+        <div><span>TIME</span><b id="result-time">--:--.---</b></div>
+        <div><span>DEATHS</span><b id="result-deaths">×0</b></div>
+        <div><span>RECORD</span><b id="result-record">--:--.---</b></div>
+      </div>
+      <p id="result-message" class="result-message"></p>
+      <div class="result-actions">
+        <button id="results-replay" class="primary">RUN AGAIN</button>
+        <button id="results-back">BACK TO MENU</button>
+      </div>
     </section>
 
     <div id="toast" role="status"></div>
 
     <div id="mobile-controls" aria-label="Touch controls">
       <div id="stick-zone" aria-label="Movement stick"><div id="stick-knob"></div></div>
-      <div id="aim-zone" aria-label="Aim area"></div>
+      <div id="aim-zone" aria-label="Aim area"><span>AIM</span></div>
       <div class="action-pad">
         <button data-control="jump">JUMP</button>
         <button data-control="hook" class="primary">HOOK</button>
