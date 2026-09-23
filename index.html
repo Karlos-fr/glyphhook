@@ -47,6 +47,7 @@
         <label><span>SCREEN SHAKE</span><input id="shake-toggle" type="checkbox" /></label>
         <label><span>REDUCED MOTION</span><input id="motion-toggle" type="checkbox" /></label>
         <label><span>HIGH CONTRAST</span><input id="contrast-toggle" type="checkbox" /></label>
+        <label><span>DEBUG OVERLAY</span><input id="debug-toggle" type="checkbox" /></label>
       </div>
       <div class="sub-title">KEYBOARD</div>
       <div class="bindings">
@@ -58,6 +59,17 @@
         <div><span>RESTART</span><button data-bind="restart"></button></div>
       </div>
       <button data-back>BACK</button>
+    </section>
+
+    <section id="pause" class="panel pause-panel" aria-label="Pause menu">
+      <div class="panel-title">PAUSED</div>
+      <p class="pause-copy">Momentum is frozen. Resume when ready.</p>
+      <div class="pause-actions">
+        <button id="pause-resume" class="primary">RESUME</button>
+        <button id="pause-restart">RESTART LEVEL</button>
+        <button id="pause-settings">SETTINGS</button>
+        <button id="pause-quit">QUIT TO MENU</button>
+      </div>
     </section>
 
     <section id="results" class="panel results-panel" aria-label="Campaign results">
@@ -76,6 +88,7 @@
     </section>
 
     <div id="toast" role="status"></div>
+    <div id="tutorial" aria-live="polite"></div>
 
     <div id="mobile-controls" aria-label="Touch controls">
       <div id="stick-zone" aria-label="Movement stick"><div id="stick-knob"></div></div>
