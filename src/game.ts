@@ -312,11 +312,13 @@ export class GlyphhookGame extends EventTarget {
       const on = (e: PointerEvent) => {
         e.preventDefault();
         button.setPointerCapture(e.pointerId);
+        if (action === 'hook') this.input.touchHookAssist = true;
         this.input.set(action, true, 'pointer');
       };
       const off = (e: PointerEvent) => {
         e.preventDefault();
         this.input.set(action, false, 'pointer');
+        if (action === 'hook') this.input.touchHookAssist = false;
       };
       button.addEventListener('pointerdown', on);
       button.addEventListener('pointerup', off);
