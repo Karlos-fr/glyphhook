@@ -88,7 +88,10 @@ button, input { font: inherit; }
 }
 .action-pad button.primary { min-width: 76px; min-height: 76px; color: #ffd969; border-color: rgba(255,217,105,.75); }
 .action-pad button:active { transform: scale(.95); background: rgba(40,72,82,.56); }
-#fullscreen { position: absolute; z-index: 30; top: max(10px,env(safe-area-inset-top)); right: max(10px,env(safe-area-inset-right)); width: 36px; height: 36px; border: 1px solid #22373f; background: rgba(3,10,15,.55); color: #627780; border-radius: 6px; }
+#pause-button, #fullscreen { position: absolute; z-index: 30; top: max(10px,env(safe-area-inset-top)); width: 36px; height: 36px; border: 1px solid #22373f; background: rgba(3,10,15,.55); color: #627780; border-radius: 6px; }
+#pause-button { left: max(10px,env(safe-area-inset-left)); display: none; }
+#fullscreen { right: max(10px,env(safe-area-inset-right)); }
+body.playing #pause-button { display: block; }
 #rotate-hint { display: none; position: absolute; z-index: 50; top: 44px; left: 50%; transform: translateX(-50%); color: #667d86; font-size: 11px; pointer-events: none; }
 
 .reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
