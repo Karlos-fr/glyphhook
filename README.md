@@ -2,30 +2,62 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement. Swing between anchors, avoid hazards, and master the physics to reach the exit.
 
-## Stack
+## v0.2
 
-- TypeScript
-- Vite
-- Canvas 2D
-- Custom fixed-step movement / rope physics
-- GitHub Pages via GitHub Actions
+Glyphhook is built around a deterministic 120 Hz custom physics loop rather than a generic platformer physics engine. The grappling rope constrains radial motion while preserving tangential velocity, so releasing at the right point carries momentum into the next jump or hook.
+
+### Features
+
+- TypeScript + Vite + Canvas 2D
+- Custom fixed-step platforming and rope physics
+- Mouse/touch-directed grappling
+- Rope reeling and tangential swing pumping
+- Bubble impulse ability
+- Checkpoints, hazards and exits
+- Movement laboratory + campaign levels
+- Main menu, level select and settings
+- Timer, best times and S/A/B/C ranks
+- LocalStorage persistence
+- Best-run ghost replay
+- Minimal synthesized sound effects
+- Mobile virtual stick, aim zone, action buttons, haptics and fullscreen
+- Automated GitHub Pages deployment
 
 ## Controls
 
 ### Desktop
 
-- `A` / `D` or `←` / `→`: move
+- `A` / `D` or `←` / `→`: move / pump swing
 - `Space` or `Z`: jump
-- Hold left mouse button, `X`, or `Shift`: hook toward the cursor
+- Hold left mouse button, `X`, or `Shift`: hook toward cursor
 - `W` / `S` or `↑` / `↓`: reel rope in/out
-- `C`: bubble burst
+- `C`: bubble
+- `Esc`: menu
 
 ### Mobile
 
-- Touch `◀` / `▶` to move
-- `JUMP`, `HOOK`, and `BUBBLE` use the on-screen buttons
-- Touch/drag anywhere on the playfield to aim the hook and bubble
-- Landscape orientation is recommended
+- Virtual analog stick: move / pump swing
+- Drag on the right side of the playfield: aim
+- `JUMP`, `HOOK`, `BUBBLE`: actions
+- `⛶`: browser fullscreen where supported
+- Landscape orientation recommended
+
+## Physics tuning
+
+All feel-critical values are centralized in `src/config/physics.ts`, including gravity, acceleration, max speed, jump velocity, hook range, reel speed, swing pumping and bubble impulse. This is intentionally separate from game logic so the reference-video feel can be calibrated without rewriting the engine.
+
+## Level format
+
+Levels live in `src/levels/index.ts` as character grids:
+
+- `#` wall
+- `@` player start
+- `o` grappling anchor
+- `^` hazard
+- `!` checkpoint
+- `E` exit
+- `.` empty space
+- other characters are rendered as dim instructional text
 
 ## Development
 
@@ -42,18 +74,4 @@ npm run build
 
 ## GitHub Pages
 
-Every push to `main` runs `.github/workflows/deploy.yml` and deploys the `dist/` output to GitHub Pages.
-
-For a new repository, enable **Settings → Pages → Build and deployment → Source: GitHub Actions** once. The workflow builds with the `/glyphhook/` base path.
-
-## Level format
-
-Levels live in `src/levels.ts` as character grids:
-
-- `#` wall
-- `@` player start
-- `o` grappling anchor
-- `^` hazard
-- `!` checkpoint
-- `E` exit
-- `.` empty space
+Pushes to `main` run `.github/workflows/deploy.yml`, build with the `/glyphhook/` base path, and deploy `dist/` to GitHub Pages.
