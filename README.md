@@ -1,77 +1,73 @@
 # Glyphhook
 
-A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement. Swing between anchors, avoid hazards, and master the physics to reach the exit.
+A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
-## v0.2
+## v0.3 — Game Feel
 
-Glyphhook is built around a deterministic 120 Hz custom physics loop rather than a generic platformer physics engine. The grappling rope constrains radial motion while preserving tangential velocity, so releasing at the right point carries momentum into the next jump or hook.
+Glyphhook uses a deterministic 120 Hz custom physics loop. The v0.3 pass focuses on movement quality, readable aiming, rope/world interaction, progression, mobile play and offline installation.
 
-### Features
+### Highlights
 
-- TypeScript + Vite + Canvas 2D
-- Custom fixed-step platforming and rope physics
-- Mouse/touch-directed grappling
-- Rope reeling and tangential swing pumping
-- Bubble impulse ability
-- Checkpoints, hazards and exits
-- Movement laboratory + campaign levels
-- Main menu, level select and settings
-- Timer, best times and S/A/B/C ranks
-- LocalStorage persistence
-- Best-run ghost replay
-- Minimal synthesized sound effects
-- Mobile virtual stick, aim zone, action buttons, haptics and fullscreen
-- Automated GitHub Pages deployment
+- Responsive full-screen renderer: the canvas and logical world scale to the entire viewport
+- Tuned gravity, acceleration, jumping, swing pumping and bubble impulse
+- Rope wrapping/unwrapping around solid tile corners
+- Pre-highlighted hook target before attachment
+- Momentum-preserving grappling with rope reeling
+- High-speed player trail, hook/bubble/checkpoint particles and optional camera shake
+- 9-level progression campaign + movement lab
+- Level unlocking, best time, death records and S/A/B/C ranks
+- Full-campaign timer and best campaign record
+- Local best-run ghost
+- Keyboard rebinding
+- Gamepad support (left stick move, right stick aim, A jump, RT hook, X bubble)
+- Mobile analog movement, touch aim, dedicated Jump/Hook/Bubble controls, haptics and fullscreen
+- Accessibility settings: reduced motion, high contrast, screen shake, HUD and audio controls
+- Minimal ambient audio and synthesized action sounds
+- PWA manifest + service worker for install/offline use after first load
+- GitHub Actions PR validation and Pages deployment
 
 ## Controls
 
 ### Desktop
 
-- `A` / `D` or `←` / `→`: move / pump swing
-- `Space` or `Z`: jump
-- Hold left mouse button, `X`, or `Shift`: hook toward cursor
-- `W` / `S` or `↑` / `↓`: reel rope in/out
+Defaults are rebindable in Settings.
+
+- `A` / `D`: move / pump swing
+- `Space`: jump
+- Hold `X` or left mouse: hook toward highlighted anchor
+- `W` / `S`: reel rope in/out
 - `C`: bubble
+- `R`: restart current level
 - `Esc`: menu
+
+### Gamepad
+
+- Left stick: move / swing pump
+- Right stick: aim
+- A / Cross: jump
+- RT / R2: hook
+- X / Square: bubble
+- LB/RB-style controls are not required; keyboard/touch reeling remains available
 
 ### Mobile
 
-- Virtual analog stick: move / pump swing
-- Drag on the right side of the playfield: aim
-- `JUMP`, `HOOK`, `BUBBLE`: actions
-- `⛶`: browser fullscreen where supported
-- Landscape orientation recommended
+- Left analog pad: movement
+- Right-side playfield: aim
+- Dedicated Jump / Hook / Bubble buttons
+- Fullscreen button attempts landscape lock where supported
 
 ## Physics tuning
 
-All feel-critical values are centralized in `src/config/physics.ts`, including gravity, acceleration, max speed, jump velocity, hook range, reel speed, swing pumping and bubble impulse. This is intentionally separate from game logic so the reference-video feel can be calibrated without rewriting the engine.
-
-## Level format
-
-Levels live in `src/levels/index.ts` as character grids:
-
-- `#` wall
-- `@` player start
-- `o` grappling anchor
-- `^` hazard
-- `!` checkpoint
-- `E` exit
-- `.` empty space
-- other characters are rendered as dim instructional text
+Feel-critical constants remain centralized in `src/config/physics.ts`. The rope path itself is handled in `src/gameplay/player.ts` using collision queries from `src/gameplay/world.ts`.
 
 ## Development
 
 ```bash
 npm install
 npm run dev
-```
-
-Production build:
-
-```bash
 npm run build
 ```
 
 ## GitHub Pages
 
-Pushes to `main` run `.github/workflows/deploy.yml`, build with the `/glyphhook/` base path, and deploy `dist/` to GitHub Pages.
+Pushes to `main` build with the `/glyphhook/` base path and deploy `dist/` to GitHub Pages. Pull requests run the same TypeScript/Vite build without deploying.
