@@ -35,9 +35,11 @@ export class Player {
   private lastCheckpoint = -1;
   private landedImpact = 0;
   private wallImpact = 0;
+  private pivotCooldown = 0;
 
   get speed() { return Math.hypot(this.vel.x, this.vel.y); }
   get ropePoints(): Vec2[] { return this.anchor ? [...this.ropePivots, this.anchor] : []; }
+  get checkpointIndex() { return this.lastCheckpoint; }
 
   reset(world: World) {
     this.spawn = { ...world.start };
@@ -55,6 +57,7 @@ export class Player {
     this.bubbleFx = 0;
     this.deaths = 0;
     this.lastCheckpoint = -1;
+    this.pivotCooldown = 0;
   }
 
   update(world: World, input: Input, camera: Vec2, dt: number): PlayerEvents {
@@ -64,6 +67,7 @@ export class Player {
     };
     this.landedImpact = 0;
     this.wallImpact = 0;
+    this.pivotCooldown = Math.max(0, this.pivotCooldown - dt);
     this.coyote = this.grounded ? P.coyoteTime : Math.max(0, this.coyote - dt);
     this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
     this.bubbleFx = Math.max(0, this.bubbleFx - dt);
@@ -89,7 +93,10 @@ export class Player {
       ? approach(this.vel.x, target, accel)
       : this.grounded ? approach(this.vel.x, 0, P.groundFriction * dt) : this.vel.x;
 
-    if (input.take('hook') && !this.anchor) ev.hooked = this.tryHook(world, input, camera);
+    const hookPressed = input.take('hook');
+    if (!this.anchor && (hookPressed || (input.touchHookAssist && input.has('hook')))) {
+      ev.hooked = this.tryHook(world, input, camera);
+    }
     if (this.anchor && !input.has('hook')) {
       this.anchor = null;
       this.ropePivots = [];
@@ -206,10 +213,11 @@ export class Player {
     if (!this.anchor) return false;
     let changed = false;
 
-    while (this.ropePivots.length) {
+    while (this.ropePivots.length && this.pivotCooldown <= 0) {
       const beyond = this.ropePivots[1] ?? this.anchor;
       if (!lineClear(world, this.pos, beyond)) break;
       this.ropePivots.shift();
+      this.pivotCooldown = 0.045;
       changed = true;
     }
 
@@ -220,6 +228,7 @@ export class Player {
       const duplicate = this.ropePivots.some((p) => dist(p, corner) < 3);
       if (!duplicate && dist(this.pos, corner) > 10 && dist(corner, target) > 5) {
         this.ropePivots.unshift(corner);
+        this.pivotCooldown = 0.055;
         this.ropeLength = Math.max(this.ropeLength, this.ropeTailLength() + P.minRopeLength);
         changed = true;
       }
