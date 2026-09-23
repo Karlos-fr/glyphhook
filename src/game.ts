@@ -59,6 +59,7 @@ export class GlyphhookGame extends EventTarget {
     this.input.clearSource('pointer');
     this.input.clearSource('gamepad');
     this.input.touchAnalogX = 0;
+    this.input.touchHookAssist = false;
     this.dispatchEvent(new CustomEvent('mode', { detail: { mode: this.mode } }));
   }
 
@@ -83,6 +84,7 @@ export class GlyphhookGame extends EventTarget {
     this.input.clearSource('pointer');
     this.input.clearSource('gamepad');
     this.input.touchAnalogX = 0;
+    this.input.touchHookAssist = false;
     this.dispatchEvent(new CustomEvent('mode', { detail: { mode: this.mode } }));
   }
 
