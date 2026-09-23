@@ -1,9 +1,13 @@
-const CACHE = 'glyphhook-v0.3';
+const CACHE = 'glyphhook-v0.3.1';
 const BASE = '/glyphhook/';
 const SHELL = [BASE, BASE + 'manifest.webmanifest', BASE + 'icon.svg'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(SHELL))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -14,13 +18,21 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE)) return;
 
+  const freshRequest = new Request(event.request, {
+    cache: event.request.mode === 'navigate' ? 'reload' : 'no-cache',
+  });
+
   event.respondWith(
-    fetch(event.request)
+    fetch(freshRequest)
       .then((response) => {
         if (response.ok) {
           const copy = response.clone();
