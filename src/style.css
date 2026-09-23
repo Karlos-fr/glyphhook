@@ -57,6 +57,19 @@ button, input { font: inherit; }
 .result-message { min-height: 18px; color: #31ff6a; font-weight: 800; letter-spacing: .08em; font-size: 12px; }
 .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 
+.pause-panel { text-align: center; }
+.pause-copy { color: #6d8892; font-size: 12px; margin: -5px 0 22px; }
+.pause-actions { display: grid; gap: 9px; }
+
+#tutorial {
+  position: absolute; z-index: 9; left: 50%; bottom: max(18px, calc(env(safe-area-inset-bottom) + 8px));
+  transform: translate(-50%, 12px); min-width: min(520px, calc(100% - 210px)); max-width: calc(100% - 32px);
+  padding: 9px 14px; border: 1px solid rgba(101,231,255,.2); background: rgba(3,6,9,.72);
+  color: #9bddea; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .03em;
+  opacity: 0; transition: .16s; pointer-events: none; backdrop-filter: blur(4px);
+}
+#tutorial.visible { opacity: 1; transform: translate(-50%, 0); }
+
 #toast { position: absolute; z-index: 40; top: max(52px, calc(env(safe-area-inset-top) + 42px)); left: 50%; transform: translate(-50%,-12px); color: #31ff6a; opacity: 0; transition: .18s; pointer-events: none; font-weight: 800; text-align: center; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translate(-50%,0); }
 
@@ -66,16 +79,19 @@ button, input { font: inherit; }
   border: 1px solid rgba(66,217,255,.25); border-radius: 46px; background: rgba(3,10,15,.36); pointer-events: auto; touch-action: none;
 }
 #stick-knob { position: absolute; width: 50px; height: 50px; border: 1px solid rgba(66,217,255,.65); border-radius: 50%; left: 40px; top: 20px; background: rgba(15,42,52,.65); }
-#aim-zone { position: absolute; right: 0; top: 0; width: 62%; height: 70%; pointer-events: auto; touch-action: none; }
+#aim-zone { position: absolute; z-index: 1; right: 0; top: 0; width: 62%; height: 70%; pointer-events: auto; touch-action: none; }
 #aim-zone span { position: absolute; right: 22px; top: 52%; color: rgba(101,231,255,.16); font-size: 10px; letter-spacing: .2em; pointer-events: none; }
-.action-pad { position: absolute; right: max(14px,env(safe-area-inset-right)); bottom: max(14px,env(safe-area-inset-bottom)); display: flex; gap: 9px; align-items: end; pointer-events: auto; }
+.action-pad { position: absolute; z-index: 3; right: max(14px,env(safe-area-inset-right)); bottom: max(14px,env(safe-area-inset-bottom)); display: flex; gap: 9px; align-items: end; pointer-events: auto; }
 .action-pad button {
   min-width: 61px; min-height: 61px; padding: 0 9px; border: 1px solid rgba(66,217,255,.55); border-radius: 50%; background: rgba(3,10,15,.72);
   color: #65e7ff; font-size: 10px; font-weight: 800; box-shadow: 0 4px 18px rgba(0,0,0,.28); backdrop-filter: blur(4px); touch-action: none;
 }
 .action-pad button.primary { min-width: 76px; min-height: 76px; color: #ffd969; border-color: rgba(255,217,105,.75); }
 .action-pad button:active { transform: scale(.95); background: rgba(40,72,82,.56); }
-#fullscreen { position: absolute; z-index: 30; top: max(10px,env(safe-area-inset-top)); right: max(10px,env(safe-area-inset-right)); width: 36px; height: 36px; border: 1px solid #22373f; background: rgba(3,10,15,.55); color: #627780; border-radius: 6px; }
+#pause-button, #fullscreen { position: absolute; z-index: 30; top: max(10px,env(safe-area-inset-top)); width: 36px; height: 36px; border: 1px solid #22373f; background: rgba(3,10,15,.55); color: #627780; border-radius: 6px; }
+#pause-button { left: max(10px,env(safe-area-inset-left)); display: none; }
+#fullscreen { right: max(10px,env(safe-area-inset-right)); }
+body.playing #pause-button { display: block; }
 #rotate-hint { display: none; position: absolute; z-index: 50; top: 44px; left: 50%; transform: translateX(-50%); color: #667d86; font-size: 11px; pointer-events: none; }
 
 .reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
@@ -84,6 +100,7 @@ button, input { font: inherit; }
   body.playing #mobile-controls { display: block; }
   .menu-help { display: none; }
   .panel { padding: 22px; }
+  #tutorial { bottom: max(102px, calc(env(safe-area-inset-bottom) + 92px)); min-width: min(440px, calc(100% - 32px)); }
 }
 @media (max-width: 620px) {
   .settings-grid, .bindings { grid-template-columns: 1fr; }

@@ -17,6 +17,7 @@ const menu = document.querySelector<HTMLElement>('#menu')!;
 const levelPanel = document.querySelector<HTMLElement>('#level-select')!;
 const settingsPanel = document.querySelector<HTMLElement>('#settings')!;
 const resultsPanel = document.querySelector<HTMLElement>('#results')!;
+const pausePanel = document.querySelector<HTMLElement>('#pause')!;
 const levelList = document.querySelector<HTMLElement>('#level-list')!;
 const toast = document.querySelector<HTMLElement>('#toast')!;
 const campaignRecord = document.querySelector<HTMLElement>('#campaign-record')!;
@@ -25,9 +26,11 @@ const resultDeaths = document.querySelector<HTMLElement>('#result-deaths')!;
 const resultRecord = document.querySelector<HTMLElement>('#result-record')!;
 const resultMessage = document.querySelector<HTMLElement>('#result-message')!;
 const installButton = document.querySelector<HTMLButtonElement>('#install-app')!;
+const tutorial = document.querySelector<HTMLElement>('#tutorial')!;
+let settingsReturnPanel: HTMLElement = menu;
 
 function hidePanels() {
-  [menu, levelPanel, settingsPanel, resultsPanel].forEach((panel) => panel.classList.remove('visible'));
+  [menu, levelPanel, settingsPanel, resultsPanel, pausePanel].forEach((panel) => panel.classList.remove('visible'));
 }
 
 function show(panel: HTMLElement) {
@@ -85,7 +88,11 @@ function bindToggle(selector: string, key: keyof typeof game.save.data.settings)
   input.addEventListener('change', () => {
     game.save.data.settings[key] = input.checked;
     game.updateSettings();
-    document.body.classList.toggle('reduced-motion', game.save.data.settings.reducedMotion);
+    document.addEventListener('visibilitychange', () => {
+  if (document.hidden && game.getMode() === 'playing') game.pause();
+});
+
+document.body.classList.toggle('reduced-motion', game.save.data.settings.reducedMotion);
   });
 }
 
@@ -97,6 +104,7 @@ bindToggle('#haptics-toggle', 'haptics');
 bindToggle('#shake-toggle', 'screenShake');
 bindToggle('#motion-toggle', 'reducedMotion');
 bindToggle('#contrast-toggle', 'highContrast');
+bindToggle('#debug-toggle', 'debugOverlay');
 
 const bindButtons = document.querySelectorAll<HTMLButtonElement>('[data-bind]');
 function keyLabel(code: string) {
@@ -145,8 +153,28 @@ document.querySelector('[data-menu="levels"]')?.addEventListener('click', () => 
   show(levelPanel);
 });
 
-document.querySelector('[data-menu="settings"]')?.addEventListener('click', () => show(settingsPanel));
-document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => show(menu)));
+document.querySelector('[data-menu="settings"]')?.addEventListener('click', () => {
+  settingsReturnPanel = menu;
+  show(settingsPanel);
+});
+document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => {
+  if (button.closest('#settings')) show(settingsReturnPanel);
+  else show(menu);
+}));
+
+document.querySelector('#pause-resume')?.addEventListener('click', () => {
+  game.resume();
+  document.body.classList.add('playing');
+});
+document.querySelector('#pause-restart')?.addEventListener('click', () => {
+  game.restartLevel();
+  document.body.classList.add('playing');
+});
+document.querySelector('#pause-settings')?.addEventListener('click', () => {
+  settingsReturnPanel = pausePanel;
+  show(settingsPanel);
+});
+document.querySelector('#pause-quit')?.addEventListener('click', () => game.showMenu());
 
 document.querySelector('#results-replay')?.addEventListener('click', () => {
   hidePanels();
@@ -160,11 +188,21 @@ game.addEventListener('mode', (event) => {
   if (mode === 'menu') {
     renderLevels();
     renderCampaignRecord();
+    tutorial.textContent = '';
     show(menu);
+  } else if (mode === 'paused') {
+    tutorial.classList.remove('visible');
+    show(pausePanel);
   } else {
     hidePanels();
     document.body.classList.add('playing');
   }
+});
+
+game.addEventListener('tutorial', (event) => {
+  const detail = (event as CustomEvent<{ text: string; step: number }>).detail;
+  tutorial.textContent = detail.text;
+  tutorial.classList.toggle('visible', Boolean(detail.text));
 });
 
 game.addEventListener('finish', (event) => {
@@ -183,6 +221,9 @@ game.addEventListener('campaignfinish', (event) => {
   resultMessage.textContent = detail.isBest ? 'NEW CAMPAIGN RECORD' : 'SIGNAL COMPLETE';
   window.setTimeout(() => show(resultsPanel), 0);
 });
+
+const pauseButton = document.querySelector<HTMLButtonElement>('#pause-button')!;
+pauseButton.addEventListener('click', () => game.togglePause());
 
 const fullscreen = document.querySelector<HTMLButtonElement>('#fullscreen')!;
 fullscreen.addEventListener('click', async () => {
@@ -226,6 +267,18 @@ game.start();
 
 if ('serviceWorker' in navigator) {
   addEventListener('load', () => {
-    void navigator.serviceWorker.register('./sw.js').catch(() => undefined);
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    if (hadController) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (sessionStorage.getItem('glyphhook-sw-reloaded') === '1') return;
+        sessionStorage.setItem('glyphhook-sw-reloaded', '1');
+        location.reload();
+      }, { once: true });
+    }
+
+    void navigator.serviceWorker
+      .register('./sw.js?v=0.3.1', { updateViaCache: 'none' })
+      .then((registration) => registration.update())
+      .catch(() => undefined);
   });
 }

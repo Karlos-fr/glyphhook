@@ -11,10 +11,11 @@ export type Settings = {
   reducedMotion: boolean;
   highContrast: boolean;
   screenShake: boolean;
+  debugOverlay: boolean;
 };
 
 type SaveData = {
-  version: 2;
+  version: 3;
   settings: Settings;
   bindings: KeyBindings;
   levels: Record<string, LevelRecord>;
@@ -23,8 +24,8 @@ type SaveData = {
   campaignBestDeaths?: number;
 };
 
-const KEY = 'glyphhook-save-v2';
-const LEGACY_KEY = 'glyphhook-save-v1';
+const KEY = 'glyphhook-save-v3';
+const LEGACY_KEYS = ['glyphhook-save-v2', 'glyphhook-save-v1'];
 const defaultSettings: Settings = {
   sound: true,
   music: true,
@@ -34,6 +35,7 @@ const defaultSettings: Settings = {
   reducedMotion: false,
   highContrast: false,
   screenShake: true,
+  debugOverlay: false,
 };
 const defaultBindings: KeyBindings = {
   left: 'KeyA',
@@ -44,7 +46,7 @@ const defaultBindings: KeyBindings = {
   restart: 'KeyR',
 };
 const defaults: SaveData = {
-  version: 2,
+  version: 3,
   settings: defaultSettings,
   bindings: defaultBindings,
   levels: {},
@@ -56,13 +58,13 @@ export class SaveStore {
 
   constructor() {
     try {
-      const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
+      const raw = localStorage.getItem(KEY) ?? LEGACY_KEYS.map((key) => localStorage.getItem(key)).find(Boolean) ?? null;
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<SaveData>;
         this.data = {
           ...defaults,
           ...parsed,
-          version: 2,
+          version: 3,
           settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
           bindings: { ...defaultBindings, ...(parsed.bindings ?? {}) },
           levels: parsed.levels ?? {},
