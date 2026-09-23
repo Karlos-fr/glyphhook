@@ -1,28 +1,57 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#030609" />
-    <meta name="description" content="Glyphhook — a minimalist ASCII grappling platformer." />
-    <title>Glyphhook</title>
-  </head>
-  <body>
-    <main id="app">
-      <canvas id="game" aria-label="Glyphhook game canvas"></canvas>
-      <div id="mobile-controls" aria-label="Touch controls">
-        <div class="move-pad">
-          <button data-control="left" aria-label="Move left">◀</button>
-          <button data-control="right" aria-label="Move right">▶</button>
-        </div>
-        <div class="action-pad">
-          <button data-control="jump" aria-label="Jump">JUMP</button>
-          <button data-control="hook" class="primary" aria-label="Hook">HOOK</button>
-          <button data-control="bubble" aria-label="Bubble">BUBBLE</button>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#030609" />
+  <meta name="description" content="Glyphhook — a minimalist ASCII grappling platformer." />
+  <title>Glyphhook</title>
+</head>
+<body>
+  <main id="app">
+    <canvas id="game" aria-label="Glyphhook"></canvas>
+
+    <section id="menu" class="panel visible" aria-label="Main menu">
+      <div class="logo">GLYPHHOOK<span>_</span></div>
+      <p class="tagline">MOMENTUM / GRAPPLE / PRECISION</p>
+      <div class="menu-buttons">
+        <button data-menu="play" class="primary">PLAY</button>
+        <button data-menu="levels">LEVEL SELECT</button>
+        <button data-menu="settings">SETTINGS</button>
       </div>
-      <div id="rotate-hint">Landscape works best on mobile.</div>
-    </main>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+      <p class="menu-help">A/D move · SPACE jump · hold click/X hook · C bubble · ESC menu</p>
+    </section>
+
+    <section id="level-select" class="panel" aria-label="Level select">
+      <div class="panel-title">LEVEL SELECT</div>
+      <div id="level-list" class="level-list"></div>
+      <button data-back>BACK</button>
+    </section>
+
+    <section id="settings" class="panel" aria-label="Settings">
+      <div class="panel-title">SETTINGS</div>
+      <label><span>SOUND</span><input id="sound-toggle" type="checkbox" checked /></label>
+      <label><span>GHOST</span><input id="ghost-toggle" type="checkbox" checked /></label>
+      <label><span>SPEEDRUN HUD</span><input id="speedrun-toggle" type="checkbox" checked /></label>
+      <label><span>HAPTICS</span><input id="haptics-toggle" type="checkbox" checked /></label>
+      <button data-back>BACK</button>
+    </section>
+
+    <div id="toast" role="status"></div>
+
+    <div id="mobile-controls" aria-label="Touch controls">
+      <div id="stick-zone" aria-label="Movement stick"><div id="stick-knob"></div></div>
+      <div id="aim-zone" aria-label="Aim area"></div>
+      <div class="action-pad">
+        <button data-control="jump">JUMP</button>
+        <button data-control="hook" class="primary">HOOK</button>
+        <button data-control="bubble">BUBBLE</button>
+      </div>
+    </div>
+
+    <button id="fullscreen" aria-label="Toggle fullscreen">⛶</button>
+    <div id="rotate-hint">ROTATE DEVICE ↻</div>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>
