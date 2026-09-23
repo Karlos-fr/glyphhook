@@ -31,6 +31,7 @@ export class AsciiRenderer {
   private trail: TrailPoint[] = [];
   private shakePower = 0;
   private time = 0;
+  private fps = 60;
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
@@ -77,6 +78,8 @@ export class AsciiRenderer {
 
   stepEffects(dt: number, player: Player, settings: Settings) {
     this.time += dt;
+    const instantFps = dt > 0 ? 1 / dt : 60;
+    this.fps += (instantFps - this.fps) * 0.08;
     this.shakePower = Math.max(0, this.shakePower - dt * 24);
     for (const p of this.particles) {
       p.life -= dt;
@@ -122,6 +125,7 @@ export class AsciiRenderer {
     g.translate(-Math.round(camera.x), -Math.round(camera.y));
     this.drawStars(g, camera, C);
     this.drawWorld(g, world, camera, player, C);
+    this.drawHookGuide(g, player, C);
     if (settings.ghost && ghost?.length) this.drawGhost(g, ghost, runMs, C);
     this.drawTrail(g, C);
     this.drawRope(g, player, C);
@@ -133,6 +137,7 @@ export class AsciiRenderer {
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.drawAim(g, aim, C);
     if (settings.speedrunHud) this.drawHud(g, world, player, runMs, bestMs, campaignText, C);
+    if (settings.debugOverlay) this.drawDebug(g, player, C);
     if (introText) this.drawCenterText(g, introText, C.ui, 16, this.screen.y * 0.22);
     if (clearText) this.drawCenterText(g, clearText, C.player, 22, this.screen.y * 0.5);
   }
@@ -155,10 +160,36 @@ export class AsciiRenderer {
         this.glyph(g, selected ? '◎' : 'O', p, selected ? C.anchorTarget : C.anchor, selected);
       }
       else if (tile === '^') this.glyph(g, '^', p, C.hazard);
-      else if (tile === '!') this.glyph(g, '!', p, C.checkpoint);
+      else if (tile === '!') {
+        const checkpointIndex = world.checkpoints.findIndex((cp) => dist(cp, p) < 2);
+        const active = checkpointIndex >= 0 && checkpointIndex === player.checkpointIndex;
+        this.glyph(g, active ? '✓' : '!', p, C.checkpoint, active);
+      }
       else if (tile === 'E') this.glyph(g, 'E', p, C.exit, true);
       else if (tile !== '.' && tile !== '@') this.glyph(g, tile, p, C.text);
     }
+  }
+
+  private drawHookGuide(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
+    g.save();
+    g.globalAlpha = 0.08;
+    g.strokeStyle = C.anchor;
+    g.lineWidth = 1;
+    g.setLineDash([5, 8]);
+    g.beginPath();
+    g.arc(player.pos.x, player.pos.y, P.hookRange, 0, Math.PI * 2);
+    g.stroke();
+    g.setLineDash([]);
+
+    if (player.candidateAnchor && !player.anchor) {
+      g.globalAlpha = 0.28;
+      g.strokeStyle = C.anchorTarget;
+      g.beginPath();
+      g.moveTo(player.pos.x, player.pos.y);
+      g.lineTo(player.candidateAnchor.x, player.candidateAnchor.y);
+      g.stroke();
+    }
+    g.restore();
   }
 
   private drawRope(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
@@ -252,12 +283,32 @@ export class AsciiRenderer {
     g.textBaseline = 'top';
     g.textAlign = 'left';
     g.fillStyle = C.ui;
-    g.fillText(`MOVE  JUMP  ${player.anchor ? '[HOOK]' : player.candidateAnchor ? '<HOOK>' : ' HOOK '}  ${player.bubbleReady ? 'BUBBLE' : '.....'}`, 14, 12);
+    const bubbleState = player.bubbleReady ? 'BUBBLE' : `BUBBLE ${Math.round((1 - player.bubbleCooldown / P.bubbleCooldown) * 100)}%`;
+    g.fillText(`MOVE  JUMP  ${player.anchor ? '[HOOK]' : player.candidateAnchor ? '<HOOK>' : ' HOOK '}  ${bubbleState}`, 14, 12);
     g.fillStyle = C.dim;
     g.fillText(`${world.def.name} · ${world.def.mechanic}`, 14, 30);
     if (campaignText) g.fillText(campaignText, 14, 48);
     g.textAlign = 'right';
     g.fillText(`${formatMs(runMs)}${bestMs !== undefined ? `  BEST ${formatMs(bestMs)}` : ''}  ×${player.deaths}`, this.screen.x - 14, 12);
+  }
+
+  private drawDebug(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
+    const x = 14;
+    const y = this.screen.y - 94;
+    g.textAlign = 'left';
+    g.textBaseline = 'top';
+    g.font = '11px ui-monospace,Menlo,Consolas,monospace';
+    g.fillStyle = 'rgba(3,6,9,.78)';
+    g.fillRect(x - 7, y - 7, 280, 88);
+    g.fillStyle = C.ui;
+    const anchor = player.anchor ? `${Math.round(player.anchor.x)},${Math.round(player.anchor.y)}` : 'none';
+    const lines = [
+      `FPS ${this.fps.toFixed(0)}   POS ${player.pos.x.toFixed(1)}, ${player.pos.y.toFixed(1)}`,
+      `VEL ${player.vel.x.toFixed(1)}, ${player.vel.y.toFixed(1)}   SPEED ${player.speed.toFixed(1)}`,
+      `ROPE ${player.ropeLength.toFixed(1)}   PIVOTS ${player.ropePivots.length}`,
+      `ANCHOR ${anchor}   GROUNDED ${player.grounded ? 'yes' : 'no'}`,
+    ];
+    lines.forEach((line, index) => g.fillText(line, x, y + index * 18));
   }
 
   private drawStars(g: CanvasRenderingContext2D, camera: Vec2, C: typeof BASE) {
