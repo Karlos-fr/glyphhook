@@ -188,6 +188,7 @@ game.addEventListener('mode', (event) => {
     tutorial.textContent = '';
     show(menu);
   } else if (mode === 'paused') {
+    tutorial.classList.remove('visible');
     show(pausePanel);
   } else {
     hidePanels();
@@ -217,6 +218,9 @@ game.addEventListener('campaignfinish', (event) => {
   resultMessage.textContent = detail.isBest ? 'NEW CAMPAIGN RECORD' : 'SIGNAL COMPLETE';
   window.setTimeout(() => show(resultsPanel), 0);
 });
+
+const pauseButton = document.querySelector<HTMLButtonElement>('#pause-button')!;
+pauseButton.addEventListener('click', () => game.togglePause());
 
 const fullscreen = document.querySelector<HTMLButtonElement>('#fullscreen')!;
 fullscreen.addEventListener('click', async () => {
