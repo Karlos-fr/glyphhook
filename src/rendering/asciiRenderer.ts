@@ -151,7 +151,7 @@ export class AsciiRenderer {
       const p = { x: x * P.cell + P.cell / 2, y: y * P.cell + P.cell / 2 + 1 };
       if (tile === '#') this.glyph(g, '#', p, (x + y) % 2 ? C.wall : C.wall2);
       else if (tile === 'o') {
-        const selected = player.candidateAnchor && dist(player.candidateAnchor, p) < 2;
+        const selected = Boolean(player.candidateAnchor && dist(player.candidateAnchor, p) < 2);
         this.glyph(g, selected ? '◎' : 'O', p, selected ? C.anchorTarget : C.anchor, selected);
       }
       else if (tile === '^') this.glyph(g, '^', p, C.hazard);
