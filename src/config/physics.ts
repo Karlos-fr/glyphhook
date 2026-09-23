@@ -18,34 +18,40 @@ export type PhysicsConfig = {
   hookAimCone: number;
   hookAimWeight: number;
   hookDistanceWeight: number;
+  ropeIterations: number;
+  ropeCornerOffset: number;
   bubbleHorizontalImpulse: number;
   bubbleVerticalImpulse: number;
   bubbleCooldown: number;
   cameraLag: number;
+  highSpeedTrail: number;
 };
 
 export const PHYSICS: PhysicsConfig = {
   cell: 18,
   playerHalf: 6,
   fixedStep: 1 / 120,
-  gravity: 1120,
-  maxFallSpeed: 780,
-  maxRunSpeed: 250,
-  groundAcceleration: 1650,
-  airAcceleration: 860,
-  groundFriction: 1900,
-  jumpVelocity: 430,
-  coyoteTime: 0.11,
-  jumpBuffer: 0.11,
-  hookRange: 440,
-  minRopeLength: 44,
-  reelSpeed: 135,
-  swingPumpAcceleration: 190,
-  hookAimCone: 0.15,
-  hookAimWeight: 0.84,
-  hookDistanceWeight: 0.16,
-  bubbleHorizontalImpulse: 215,
-  bubbleVerticalImpulse: 350,
-  bubbleCooldown: 0.42,
-  cameraLag: 8.5,
+  gravity: 1240,
+  maxFallSpeed: 840,
+  maxRunSpeed: 270,
+  groundAcceleration: 1950,
+  airAcceleration: 920,
+  groundFriction: 2250,
+  jumpVelocity: 438,
+  coyoteTime: 0.105,
+  jumpBuffer: 0.105,
+  hookRange: 438,
+  minRopeLength: 42,
+  reelSpeed: 155,
+  swingPumpAcceleration: 235,
+  hookAimCone: 0.20,
+  hookAimWeight: 0.88,
+  hookDistanceWeight: 0.12,
+  ropeIterations: 3,
+  ropeCornerOffset: 2.2,
+  bubbleHorizontalImpulse: 205,
+  bubbleVerticalImpulse: 365,
+  bubbleCooldown: 0.38,
+  cameraLag: 10,
+  highSpeedTrail: 330,
 };
