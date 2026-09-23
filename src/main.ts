@@ -4,6 +4,11 @@ import { LEVELS } from './levels/index';
 import { formatMs, rankFor } from './rendering/asciiRenderer';
 import type { BindableAction } from './storage';
 
+interface InstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
 if (!canvas) throw new Error('Missing #game canvas');
 
@@ -11,12 +16,18 @@ const game = new GlyphhookGame(canvas);
 const menu = document.querySelector<HTMLElement>('#menu')!;
 const levelPanel = document.querySelector<HTMLElement>('#level-select')!;
 const settingsPanel = document.querySelector<HTMLElement>('#settings')!;
+const resultsPanel = document.querySelector<HTMLElement>('#results')!;
 const levelList = document.querySelector<HTMLElement>('#level-list')!;
 const toast = document.querySelector<HTMLElement>('#toast')!;
 const campaignRecord = document.querySelector<HTMLElement>('#campaign-record')!;
+const resultTime = document.querySelector<HTMLElement>('#result-time')!;
+const resultDeaths = document.querySelector<HTMLElement>('#result-deaths')!;
+const resultRecord = document.querySelector<HTMLElement>('#result-record')!;
+const resultMessage = document.querySelector<HTMLElement>('#result-message')!;
+const installButton = document.querySelector<HTMLButtonElement>('#install-app')!;
 
 function hidePanels() {
-  [menu, levelPanel, settingsPanel].forEach((panel) => panel.classList.remove('visible'));
+  [menu, levelPanel, settingsPanel, resultsPanel].forEach((panel) => panel.classList.remove('visible'));
 }
 
 function show(panel: HTMLElement) {
@@ -137,6 +148,13 @@ document.querySelector('[data-menu="levels"]')?.addEventListener('click', () => 
 document.querySelector('[data-menu="settings"]')?.addEventListener('click', () => show(settingsPanel));
 document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => show(menu)));
 
+document.querySelector('#results-replay')?.addEventListener('click', () => {
+  hidePanels();
+  document.body.classList.add('playing');
+  game.startCampaign();
+});
+document.querySelector('#results-back')?.addEventListener('click', () => show(menu));
+
 game.addEventListener('mode', (event) => {
   const mode = (event as CustomEvent<{ mode: string }>).detail.mode;
   if (mode === 'menu') {
@@ -159,7 +177,11 @@ game.addEventListener('finish', (event) => {
 game.addEventListener('campaignfinish', (event) => {
   const detail = (event as CustomEvent<{ ms: number; deaths: number; isBest: boolean }>).detail;
   renderCampaignRecord();
-  showToast(`CAMPAIGN CLEAR · ${formatMs(detail.ms)} · ×${detail.deaths}${detail.isBest ? ' · NEW BEST' : ''}`, 2600);
+  resultTime.textContent = formatMs(detail.ms);
+  resultDeaths.textContent = `×${detail.deaths}`;
+  resultRecord.textContent = formatMs(game.save.data.campaignBestMs ?? detail.ms);
+  resultMessage.textContent = detail.isBest ? 'NEW CAMPAIGN RECORD' : 'SIGNAL COMPLETE';
+  window.setTimeout(() => show(resultsPanel), 0);
 });
 
 const fullscreen = document.querySelector<HTMLButtonElement>('#fullscreen')!;
@@ -175,6 +197,25 @@ fullscreen.addEventListener('click', async () => {
   } catch {
     showToast('FULLSCREEN NOT AVAILABLE');
   }
+});
+
+let installPrompt: InstallPromptEvent | null = null;
+addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  installPrompt = event as InstallPromptEvent;
+  installButton.hidden = false;
+});
+installButton.addEventListener('click', async () => {
+  if (!installPrompt) return;
+  await installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  installButton.hidden = true;
+});
+addEventListener('appinstalled', () => {
+  installPrompt = null;
+  installButton.hidden = true;
+  showToast('GLYPHHOOK INSTALLED');
 });
 
 document.body.classList.toggle('reduced-motion', game.save.data.settings.reducedMotion);
