@@ -3,6 +3,7 @@ import { dist, lerp, mod, type Vec2 } from '../engine/math';
 import type { Player } from '../gameplay/player';
 import { tileAt, type World } from '../gameplay/world';
 import type { GhostPoint, Settings } from '../storage';
+import { drawPixelGlyph } from './pixelGlyphs';
 
 const BASE = {
   bg: '#080b0d',
@@ -239,13 +240,13 @@ export class AsciiRenderer {
       if (tile === '#') this.glyph(g, '#', p, (x + y) % 2 ? C.wall : C.wall2);
       else if (tile === 'o') {
         const selected = Boolean(player.candidateAnchor && dist(player.candidateAnchor, p) < 2);
-        this.glyph(g, selected ? '◎' : 'O', p, selected ? C.anchorTarget : C.anchor, selected);
+        this.glyph(g, 'O', p, selected ? C.anchorTarget : C.anchor, selected);
       }
       else if (tile === '^') this.glyph(g, '^', p, C.hazard);
       else if (tile === '!') {
         const checkpointIndex = world.checkpoints.findIndex((cp) => dist(cp, p) < 2);
         const active = checkpointIndex >= 0 && checkpointIndex === player.checkpointIndex;
-        this.glyph(g, active ? '✓' : '!', p, C.checkpoint, active);
+        this.glyph(g, '!', p, C.checkpoint, active);
       }
       else if (tile === 'E') this.glyph(g, 'E', p, C.exit, true);
       else if (tile !== '.' && tile !== '@') this.glyph(g, tile, p, C.text);
@@ -278,17 +279,20 @@ export class AsciiRenderer {
   private drawRope(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
     if (!player.anchor) return;
     const points = [player.pos, ...player.ropePoints];
-    g.font = '11px monospace';
-    g.fillStyle = C.rope;
+    g.save();
+    g.strokeStyle = C.rope;
+    g.lineWidth = 2;
+    g.lineCap = 'butt';
+    g.setLineDash([5, 5]);
     for (let s = 0; s < points.length - 1; s++) {
       const a = points[s], b = points[s + 1];
-      const n = Math.max(2, Math.floor(dist(a, b) / 9));
-      for (let i = 1; i < n; i++) {
-        const t = i / n;
-        g.fillText((i + s) % 2 ? '·' : '-', lerp(a.x, b.x, t), lerp(a.y, b.y, t));
-      }
+      g.beginPath();
+      g.moveTo(Math.round(a.x), Math.round(a.y));
+      g.lineTo(Math.round(b.x), Math.round(b.y));
+      g.stroke();
     }
-    for (const pivot of player.ropePivots) this.glyph(g, '+', pivot, C.rope, true);
+    g.restore();
+    for (const pivot of player.ropePivots) this.glyph(g, '+', pivot, C.rope, false);
   }
 
   private drawTrail(g: CanvasRenderingContext2D, C: typeof BASE) {
@@ -325,8 +329,7 @@ export class AsciiRenderer {
 
   private drawPlayer(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
     const bob = player.grounded ? 0 : Math.sin(this.time * 18) * 0.5;
-    const glyph = player.anchor ? '@' : player.speed > P.highSpeedTrail ? '＠' : '@';
-    this.glyph(g, glyph, { x: player.pos.x, y: player.pos.y + bob }, C.player, true);
+    this.glyph(g, '@', { x: player.pos.x, y: player.pos.y + bob }, C.player, true);
   }
 
   private drawGhost(g: CanvasRenderingContext2D, ghost: GhostPoint[], runMs: number, C: typeof BASE) {
@@ -449,10 +452,15 @@ export class AsciiRenderer {
   }
 
   private glyph(g: CanvasRenderingContext2D, ch: string, p: Vec2, color: string, glow = false) {
+    if (drawPixelGlyph(g, ch, p, color, glow)) return;
+    g.save();
     g.fillStyle = color;
-    if (glow) { g.shadowColor = color; g.shadowBlur = 2; }
+    if (glow) {
+      g.shadowColor = color;
+      g.shadowBlur = 4;
+    }
     g.fillText(ch, p.x, p.y);
-    if (glow) g.shadowBlur = 0;
+    g.restore();
   }
 
   private makeStars() {
