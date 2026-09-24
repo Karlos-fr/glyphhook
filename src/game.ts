@@ -40,6 +40,7 @@ export class GlyphhookGame extends EventTarget {
     super();
     validateLevels(LEVELS);
     this.renderer = new AsciiRenderer(canvas);
+    this.renderer.setWorldSize(this.world.width * P.cell, this.world.height * P.cell);
     this.applySettings();
     this.player.reset(this.world);
     this.bindInput();
@@ -123,6 +124,7 @@ export class GlyphhookGame extends EventTarget {
     this.levelIndex = clamp(Math.floor(index), 0, LEVELS.length - 1);
     this.campaign = keepCampaign;
     this.world = makeWorld(LEVELS[this.levelIndex]);
+    this.renderer.setWorldSize(this.world.width * P.cell, this.world.height * P.cell);
     this.player.reset(this.world);
     this.camera = { x: 0, y: 0 };
     this.runMs = 0;
@@ -272,7 +274,7 @@ export class GlyphhookGame extends EventTarget {
       '1/6  MOVE  — use A/D, arrows, stick or gamepad',
       '2/6  JUMP  — press Space / ↑ / JUMP / gamepad A',
       '3/6  AIM  — point toward a highlighted anchor',
-      '4/6  HOLD HOOK  — keep it held and start swinging',
+      '4/6  HOLD HOOK  — the rope reels in while you swing',
       '5/6  RELEASE  — let go while moving upward/forward',
       '6/6  BUBBLE  — use the impulse to correct your arc',
       'TRAINING COMPLETE  — reach E when you are ready',
