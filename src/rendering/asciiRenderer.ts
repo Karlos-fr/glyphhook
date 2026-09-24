@@ -3,7 +3,6 @@ import { dist, lerp, mod, type Vec2 } from '../engine/math';
 import type { Player } from '../gameplay/player';
 import { tileAt, type World } from '../gameplay/world';
 import type { GhostPoint, Settings } from '../storage';
-import { drawPixelGlyph } from './pixelGlyphs';
 
 const BASE = {
   bg: '#080b0d',
@@ -226,7 +225,7 @@ export class AsciiRenderer {
   }
 
   private drawWorld(g: CanvasRenderingContext2D, world: World, camera: Vec2, player: Player, C: typeof BASE) {
-    g.font = `bold ${P.cell}px ui-monospace,Menlo,Consolas,monospace`;
+    g.font = 'bold 20px "Courier New", ui-monospace, monospace';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     const x0 = Math.max(0, Math.floor(camera.x / P.cell) - 1);
@@ -280,16 +279,17 @@ export class AsciiRenderer {
     if (!player.anchor) return;
     const points = [player.pos, ...player.ropePoints];
     g.save();
-    g.strokeStyle = C.rope;
-    g.lineWidth = 2;
-    g.lineCap = 'butt';
-    g.setLineDash([5, 5]);
+    g.font = 'bold 11px "Courier New", monospace';
+    g.fillStyle = C.rope;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
     for (let s = 0; s < points.length - 1; s++) {
       const a = points[s], b = points[s + 1];
-      g.beginPath();
-      g.moveTo(Math.round(a.x), Math.round(a.y));
-      g.lineTo(Math.round(b.x), Math.round(b.y));
-      g.stroke();
+      const n = Math.max(2, Math.floor(dist(a, b) / 7));
+      for (let i = 1; i < n; i++) {
+        const t = i / n;
+        g.fillText(i % 2 ? '·' : '-', lerp(a.x, b.x, t), lerp(a.y, b.y, t));
+      }
     }
     g.restore();
     for (const pivot of player.ropePivots) this.glyph(g, '+', pivot, C.rope, false);
@@ -452,14 +452,31 @@ export class AsciiRenderer {
   }
 
   private glyph(g: CanvasRenderingContext2D, ch: string, p: Vec2, color: string, glow = false) {
-    if (drawPixelGlyph(g, ch, p, color, glow)) return;
     g.save();
+    g.translate(Math.round(p.x), Math.round(p.y));
+
+    // The reference uses real monospace characters packed much tighter than
+    // a browser's default glyph advance. Keep true text glyphs, but widen
+    // them visually inside the 18px logical cell so repeated # characters
+    // read as a dense wall instead of separated symbols.
+    const scaleX =
+      ch === '#' ? 1.48 :
+      ch === '^' ? 1.38 :
+      ch === '@' ? 1.28 :
+      1.24;
+
+    g.scale(scaleX, 1);
     g.fillStyle = color;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = 'bold 20px "Courier New", ui-monospace, monospace';
+
     if (glow) {
       g.shadowColor = color;
       g.shadowBlur = 4;
     }
-    g.fillText(ch, p.x, p.y);
+
+    g.fillText(ch, 0, 0);
     g.restore();
   }
 
