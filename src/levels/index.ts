@@ -58,7 +58,7 @@ export const LEVELS: LevelDef[] = [
     rows: room((g) => {
       platform(g, 1, 12, 29, 2);
       platform(g, 27, 35, 25, 2);
-      platform(g, 47, 59, 29, 2);
+      platform(g, 47, 62, 29, 2);
       lava(g, 13, 26);
       lava(g, 36, 46);
       anchor(g, 21, 15);
@@ -66,7 +66,7 @@ export const LEVELS: LevelDef[] = [
       anchor(g, 52, 18);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
-      put(g, 56, 28, 'E');
+      put(g, 60, 28, 'E');
     }),
   },
   {
@@ -80,28 +80,31 @@ export const LEVELS: LevelDef[] = [
       platform(g, 16, 21, 27, 2);
       platform(g, 27, 32, 25, 2);
       platform(g, 38, 43, 27, 2);
-      platform(g, 49, 59, 29, 2);
+      platform(g, 49, 62, 29, 2);
       lava(g, 11, 48);
       put(g, 5, 28, '@');
       put(g, 8, 28, '!');
-      put(g, 56, 28, 'E');
+      put(g, 60, 28, 'E');
     }),
   },
   {
     id: 'first-line',
     name: '02 / FIRST SWING',
-    subtitle: 'RUN, HOOK, RISE',
-    mechanic: 'SINGLE HOOK',
+    subtitle: 'LET THE ROPE LIFT YOU',
+    mechanic: 'HOLD HOOK',
     parMs: 16000,
     rows: room((g) => {
       platform(g, 1, 13, 29, 2);
-      platform(g, 38, 49, 23, 2);
-      platform(g, 50, 59, 29, 2);
-      lava(g, 14, 49);
+      platform(g, 21, 31, 23, 2);
+      platform(g, 38, 45, 26, 2);
+      platform(g, 52, 62, 29, 2);
+      lava(g, 14, 20);
+      lava(g, 32, 37);
+      lava(g, 46, 51);
       anchor(g, 25, 13);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
-      put(g, 46, 22, 'E');
+      put(g, 60, 28, 'E');
     }),
   },
   {
@@ -113,12 +116,12 @@ export const LEVELS: LevelDef[] = [
     rows: room((g) => {
       platform(g, 1, 12, 29, 2);
       platform(g, 38, 42, 22, 2);
-      platform(g, 50, 59, 28, 2);
+      platform(g, 50, 62, 28, 2);
       lava(g, 13, 49);
       anchor(g, 26, 12);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
-      put(g, 56, 27, 'E');
+      put(g, 60, 27, 'E');
     }),
   },
   {
@@ -130,14 +133,14 @@ export const LEVELS: LevelDef[] = [
     rows: room((g) => {
       platform(g, 1, 10, 29, 2);
       platform(g, 28, 31, 25, 2);
-      platform(g, 50, 59, 25, 2);
+      platform(g, 50, 62, 25, 2);
       lava(g, 11, 49);
       anchor(g, 19, 14);
       anchor(g, 35, 13);
       anchor(g, 47, 16);
       put(g, 5, 28, '@');
       put(g, 8, 28, '!');
-      put(g, 56, 24, 'E');
+      put(g, 60, 24, 'E');
     }),
   },
   {
@@ -150,11 +153,11 @@ export const LEVELS: LevelDef[] = [
       platform(g, 1, 12, 29, 2);
       platform(g, 22, 28, 26, 2);
       platform(g, 39, 45, 24, 2);
-      platform(g, 52, 59, 29, 2);
+      platform(g, 52, 62, 29, 2);
       lava(g, 13, 51);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
-      put(g, 56, 28, 'E');
+      put(g, 60, 28, 'E');
     }),
   },
   {
@@ -166,13 +169,13 @@ export const LEVELS: LevelDef[] = [
     rows: room((g) => {
       platform(g, 1, 11, 29, 2);
       platform(g, 29, 34, 24, 2);
-      platform(g, 49, 59, 25, 2);
+      platform(g, 49, 62, 25, 2);
       lava(g, 12, 48);
       anchor(g, 20, 14);
       anchor(g, 40, 12);
       put(g, 5, 28, '@');
       put(g, 8, 28, '!');
-      put(g, 56, 24, 'E');
+      put(g, 60, 24, 'E');
     }),
   },
   {
@@ -185,14 +188,14 @@ export const LEVELS: LevelDef[] = [
       platform(g, 1, 9, 29, 2);
       platform(g, 25, 27, 23, 2);
       platform(g, 39, 41, 21, 2);
-      platform(g, 53, 59, 25, 2);
+      platform(g, 53, 62, 25, 2);
       lava(g, 10, 52);
       anchor(g, 18, 13);
       anchor(g, 32, 11);
       anchor(g, 46, 13);
       put(g, 5, 28, '@');
       put(g, 7, 28, '!');
-      put(g, 56, 24, 'E');
+      put(g, 60, 24, 'E');
     }),
   },
   {
@@ -208,7 +211,7 @@ export const LEVELS: LevelDef[] = [
       platform(g, 37, 43, 17, 2);
       platform(g, 25, 31, 13, 2);
       platform(g, 42, 49, 9, 2);
-      platform(g, 51, 59, 6, 2);
+      platform(g, 51, 62, 6, 2);
       lava(g, 12, 59);
       anchor(g, 18, 18);
       anchor(g, 31, 14);
@@ -217,7 +220,7 @@ export const LEVELS: LevelDef[] = [
       anchor(g, 50, 4);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
-      put(g, 56, 5, 'E');
+      put(g, 60, 5, 'E');
     }),
   },
   {
@@ -230,14 +233,14 @@ export const LEVELS: LevelDef[] = [
       platform(g, 1, 10, 29, 2);
       platform(g, 25, 30, 24, 2);
       platform(g, 38, 42, 20, 2);
-      platform(g, 51, 59, 26, 2);
+      platform(g, 51, 62, 26, 2);
       lava(g, 11, 50);
       anchor(g, 18, 14);
       anchor(g, 34, 11);
       anchor(g, 47, 13);
       put(g, 5, 28, '@');
       put(g, 8, 28, '!');
-      put(g, 56, 25, 'E');
+      put(g, 60, 25, 'E');
     }),
   },
 ];
