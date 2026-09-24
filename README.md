@@ -2,6 +2,12 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.4.4 — Bubble Room Reachability
+
+- Rebuilt level 05 / BUBBLE so every platform-to-platform jump is inside the current jump envelope
+- The two upward jumps are now 120 px with 36 px of climb, comfortably below the ~165 px reachable distance
+- Bubble remains a correction tool instead of being required to rescue impossible geometry
+
 ## v0.4.3 — Smooth Glyph Waves
 
 - Checkpoint `!` now has a clearly visible continuous green breathing pulse
