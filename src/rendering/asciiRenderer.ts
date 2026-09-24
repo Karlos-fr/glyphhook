@@ -111,9 +111,9 @@ export class AsciiRenderer {
   resize() {
     const r = this.canvas.getBoundingClientRect();
     this.screen = { x: Math.max(320, r.width), y: Math.max(240, r.height) };
-    this.zoom = Math.max(
-      0.45,
-      Math.min(this.screen.x / this.worldPixels.x, this.screen.y / this.worldPixels.y),
+    this.zoom = Math.min(
+      this.screen.x / this.worldPixels.x,
+      this.screen.y / this.worldPixels.y,
     );
     this.view = { x: this.screen.x / this.zoom, y: this.screen.y / this.zoom };
     this.worldOffset = {
