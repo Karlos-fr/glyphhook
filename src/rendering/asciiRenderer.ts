@@ -40,6 +40,42 @@ const HIGH = {
   aim: '#d1d6d9',
   text: '#c5cdd1',
 };
+const LEVEL_BASE = {
+  bg: '#030609',
+  wall: '#39458f',
+  wall2: '#1b2358',
+  player: '#31ff6a',
+  anchor: '#ffd969',
+  anchorTarget: '#fff2a9',
+  hazard: '#ff5858',
+  checkpoint: '#61ff98',
+  exit: '#c563ff',
+  rope: '#d6945e',
+  bubble: '#58ebff',
+  ui: '#42d9ff',
+  dim: '#39545c',
+  star: '#17232f',
+  aim: '#657581',
+  ghost: 'rgba(49,255,106,.28)',
+  text: '#6d8892',
+  particle: '#c9f8ff',
+};
+const LEVEL_HIGH = {
+  ...LEVEL_BASE,
+  bg: '#000000',
+  wall: '#6577ff',
+  wall2: '#3243b8',
+  player: '#54ff72',
+  anchor: '#ffe14a',
+  anchorTarget: '#fff2a9',
+  hazard: '#ff3c3c',
+  checkpoint: '#68ffb1',
+  exit: '#f184ff',
+  ui: '#64efff',
+  dim: '#8da0a8',
+  aim: '#d0d8dc',
+  text: '#b7c8cd',
+};
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; glyph: string; color: string };
 type TrailPoint = { x: number; y: number; life: number };
@@ -135,9 +171,10 @@ export class AsciiRenderer {
     campaignText = '',
   ) {
     const C = settings.highContrast ? HIGH : BASE;
+    const W = settings.highContrast ? LEVEL_HIGH : LEVEL_BASE;
     const g = this.ctx;
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    g.fillStyle = C.bg;
+    g.fillStyle = W.bg;
     g.fillRect(0, 0, this.screen.x, this.screen.y);
     this.drawSignalTexture(g, C);
 
@@ -149,22 +186,22 @@ export class AsciiRenderer {
     g.setTransform(this.dpr * this.zoom, 0, 0, this.dpr * this.zoom, shake.x * this.dpr, shake.y * this.dpr);
     g.translate(-Math.round(camera.x), -Math.round(camera.y));
     this.drawStars(g, camera, C);
-    this.drawWorld(g, world, camera, player, C);
-    this.drawHookGuide(g, player, C);
-    if (settings.ghost && ghost?.length) this.drawGhost(g, ghost, runMs, C);
-    this.drawTrail(g, C);
-    this.drawRope(g, player, C);
+    this.drawWorld(g, world, camera, player, W);
+    this.drawHookGuide(g, player, W);
+    if (settings.ghost && ghost?.length) this.drawGhost(g, ghost, runMs, W);
+    this.drawTrail(g, W);
+    this.drawRope(g, player, W);
     this.drawParticles(g);
-    this.drawBubble(g, player, C);
-    this.drawPlayer(g, player, C);
+    this.drawBubble(g, player, W);
+    this.drawPlayer(g, player, W);
     g.restore();
 
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    this.drawAim(g, aim, C);
+    this.drawAim(g, aim, W);
     if (settings.speedrunHud) this.drawHud(g, world, player, runMs, bestMs, campaignText, C);
     if (settings.debugOverlay) this.drawDebug(g, player, C);
     if (introText) this.drawCenterText(g, introText, C.ui, 16, this.screen.y * 0.22);
-    if (clearText) this.drawCenterText(g, clearText, C.player, 22, this.screen.y * 0.5);
+    if (clearText) this.drawCenterText(g, clearText, W.player, 22, this.screen.y * 0.5);
   }
 
   private drawWorld(g: CanvasRenderingContext2D, world: World, camera: Vec2, player: Player, C: typeof BASE) {
