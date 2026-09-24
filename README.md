@@ -2,6 +2,14 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.4.2 — Living Glyphs & AZERTY Fix
+
+- Fixed the `Z` shortcut on AZERTY keyboards by using the typed character instead of only the physical key code
+- `!` checkpoints now pulse softly between their base green and a lighter green
+- `E` exits pulse softly toward a lighter violet
+- Lava `^` glyphs cycle independently through red/orange/yellow tones with per-cell phase offsets
+- Reduced Motion keeps these world-state colors static
+
 ## v0.4.1 — Manual Grapple Reeling
 
 - `Z` is always available as a jump key while not attached
