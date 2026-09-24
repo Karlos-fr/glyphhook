@@ -91,16 +91,18 @@ button, input { font: inherit; }
 #pause-button, #fullscreen { position: absolute; z-index: 30; top: max(10px,env(safe-area-inset-top)); width: 36px; height: 36px; border: 1px solid #22373f; background: rgba(3,10,15,.55); color: #627780; border-radius: 6px; }
 #pause-button { left: max(10px,env(safe-area-inset-left)); display: none; }
 #fullscreen { right: max(10px,env(safe-area-inset-right)); }
-body.playing #pause-button { display: block; }
 #rotate-hint { display: none; position: absolute; z-index: 50; top: 44px; left: 50%; transform: translateX(-50%); color: #667d86; font-size: 11px; pointer-events: none; }
 
 .reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 
-@media (pointer: coarse), (max-width: 900px) {
+@media (pointer: coarse) {
   body.playing #mobile-controls { display: block; }
+  body.playing #pause-button { display: block; }
   .menu-help { display: none; }
-  .panel { padding: 22px; }
   #tutorial { bottom: max(102px, calc(env(safe-area-inset-bottom) + 92px)); min-width: min(440px, calc(100% - 32px)); }
+}
+@media (max-width: 900px) {
+  .panel { padding: 22px; }
 }
 @media (max-width: 620px) {
   .settings-grid, .bindings { grid-template-columns: 1fr; }
