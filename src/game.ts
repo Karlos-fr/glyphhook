@@ -270,7 +270,7 @@ export class GlyphhookGame extends EventTarget {
     }
     const steps = [
       '1/6  MOVE  — use A/D, arrows, stick or gamepad',
-      '2/6  JUMP  — press Space / JUMP / gamepad A',
+      '2/6  JUMP  — press Space / ↑ / JUMP / gamepad A',
       '3/6  AIM  — point toward a highlighted anchor',
       '4/6  HOLD HOOK  — keep it held and start swinging',
       '5/6  RELEASE  — let go while moving upward/forward',
