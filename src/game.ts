@@ -352,12 +352,19 @@ export class GlyphhookGame extends EventTarget {
     return fallback.get(code) ?? null;
   }
 
-  private contextualKeyboardAction(code: string): Action | null {
-    if (code === 'ArrowUp' || code === 'KeyZ') {
+  private contextualKeyboardAction(code: string, key = ''): Action | null {
+    const label = key.toLowerCase();
+
+    // Use event.key for letter shortcuts so AZERTY/QWERTY users get the
+    // character printed on the key, not the physical keyboard position.
+    if (code === 'ArrowUp' || label === 'z') {
       return this.player.anchor ? 'in' : 'jump';
     }
-    if (code === 'ArrowDown' || code === 'KeyS') {
+    if (code === 'ArrowDown' || label === 's') {
       return this.player.anchor ? 'out' : null;
+    }
+    if (label === 'w') {
+      return this.player.anchor ? 'in' : null;
     }
     return this.boundAction(code);
   }
@@ -382,7 +389,7 @@ export class GlyphhookGame extends EventTarget {
       }
       let action = this.activeKeyboardActions.get(e.code) ?? null;
       if (!action) {
-        action = this.contextualKeyboardAction(e.code);
+        action = this.contextualKeyboardAction(e.code, e.key);
         if (action) this.activeKeyboardActions.set(e.code, action);
       }
       if (action) {
@@ -392,7 +399,7 @@ export class GlyphhookGame extends EventTarget {
     }, { passive: false });
 
     addEventListener('keyup', (e) => {
-      const action = this.activeKeyboardActions.get(e.code) ?? this.contextualKeyboardAction(e.code);
+      const action = this.activeKeyboardActions.get(e.code) ?? this.contextualKeyboardAction(e.code, e.key);
       if (action) {
         e.preventDefault();
         this.input.set(action, false, 'keyboard');
