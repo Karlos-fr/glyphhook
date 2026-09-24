@@ -182,12 +182,13 @@ export class AsciiRenderer {
     g.setLineDash([]);
 
     if (player.candidateAnchor && !player.anchor) {
-      g.globalAlpha = 0.28;
+      g.globalAlpha = 0.34;
       g.strokeStyle = C.anchorTarget;
+      g.setLineDash([2, 6]);
       g.beginPath();
-      g.moveTo(player.pos.x, player.pos.y);
-      g.lineTo(player.candidateAnchor.x, player.candidateAnchor.y);
+      g.arc(player.candidateAnchor.x, player.candidateAnchor.y, 13, 0, Math.PI * 2);
       g.stroke();
+      g.setLineDash([]);
     }
     g.restore();
   }
