@@ -277,7 +277,7 @@ if ('serviceWorker' in navigator) {
     }
 
     void navigator.serviceWorker
-      .register('./sw.js?v=0.4.3', { updateViaCache: 'none' })
+      .register('./sw.js?v=0.4.4', { updateViaCache: 'none' })
       .then((registration) => registration.update())
       .catch(() => undefined);
   });
