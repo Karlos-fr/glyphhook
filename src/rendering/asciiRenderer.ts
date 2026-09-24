@@ -5,16 +5,40 @@ import { tileAt, type World } from '../gameplay/world';
 import type { GhostPoint, Settings } from '../storage';
 
 const BASE = {
-  bg: '#030609', wall: '#39458f', wall2: '#1b2358', player: '#31ff6a', anchor: '#ffd969',
-  anchorTarget: '#fff2a9', hazard: '#ff5858', checkpoint: '#61ff98', exit: '#c563ff', rope: '#d6945e',
-  bubble: '#58ebff', ui: '#42d9ff', dim: '#39545c', star: '#17232f', aim: '#657581',
-  ghost: 'rgba(49,255,106,.28)', text: '#6d8892', particle: '#c9f8ff',
+  bg: '#080b0d',
+  wall: '#46505a',
+  wall2: '#303841',
+  player: '#d6dfd7',
+  anchor: '#b89b63',
+  anchorTarget: '#d8c48e',
+  hazard: '#a9574d',
+  checkpoint: '#7f9d87',
+  exit: '#8d829d',
+  rope: '#786b52',
+  bubble: '#829aa6',
+  ui: '#b5bec4',
+  dim: '#68737b',
+  star: '#161c20',
+  aim: '#69737b',
+  ghost: 'rgba(214,223,215,.16)',
+  text: '#7e8990',
+  particle: '#c3c9cc',
 };
 const HIGH = {
   ...BASE,
-  bg: '#000000', wall: '#6577ff', wall2: '#3243b8', player: '#54ff72', anchor: '#ffe14a',
-  hazard: '#ff3c3c', checkpoint: '#68ffb1', exit: '#f184ff', ui: '#64efff', dim: '#8da0a8',
-  aim: '#d0d8dc', text: '#b7c8cd',
+  bg: '#020303',
+  wall: '#737f89',
+  wall2: '#4d5962',
+  player: '#eef2ee',
+  anchor: '#d0b577',
+  anchorTarget: '#ead7a1',
+  hazard: '#c36e62',
+  checkpoint: '#9eb7a3',
+  exit: '#aaa0b7',
+  ui: '#d7dde0',
+  dim: '#98a3aa',
+  aim: '#d1d6d9',
+  text: '#c5cdd1',
 };
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; glyph: string; color: string };
@@ -115,6 +139,7 @@ export class AsciiRenderer {
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     g.fillStyle = C.bg;
     g.fillRect(0, 0, this.screen.x, this.screen.y);
+    this.drawSignalTexture(g, C);
 
     const shake = this.shakePower > 0 && !settings.reducedMotion
       ? { x: (Math.random() - 0.5) * this.shakePower, y: (Math.random() - 0.5) * this.shakePower }
@@ -284,13 +309,25 @@ export class AsciiRenderer {
     g.textBaseline = 'top';
     g.textAlign = 'left';
     g.fillStyle = C.ui;
-    const bubbleState = player.bubbleReady ? 'BUBBLE' : `BUBBLE ${Math.round((1 - player.bubbleCooldown / P.bubbleCooldown) * 100)}%`;
-    g.fillText(`MOVE  JUMP  ${player.anchor ? '[HOOK]' : player.candidateAnchor ? '<HOOK>' : ' HOOK '}  ${bubbleState}`, 14, 12);
+    g.fillText(world.def.name, 14, 12);
+
     g.fillStyle = C.dim;
-    g.fillText(`${world.def.name} · ${world.def.mechanic}`, 14, 30);
-    if (campaignText) g.fillText(campaignText, 14, 48);
+    g.fillText(world.def.mechanic, 14, 30);
+
+    if (!player.bubbleReady) {
+      const pct = Math.round((1 - player.bubbleCooldown / P.bubbleCooldown) * 100);
+      g.fillText(`BUBBLE RECOVERY ${pct}%`, 14, 48);
+    } else if (campaignText) {
+      g.fillText(campaignText, 14, 48);
+    }
+
     g.textAlign = 'right';
-    g.fillText(`${formatMs(runMs)}${bestMs !== undefined ? `  BEST ${formatMs(bestMs)}` : ''}  ×${player.deaths}`, this.screen.x - 14, 12);
+    g.fillStyle = C.ui;
+    g.fillText(
+      `${formatMs(runMs)}${bestMs !== undefined ? `  BEST ${formatMs(bestMs)}` : ''}  ×${player.deaths}`,
+      this.screen.x - 14,
+      12,
+    );
   }
 
   private drawDebug(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
@@ -310,6 +347,30 @@ export class AsciiRenderer {
       `ANCHOR ${anchor}   GROUNDED ${player.grounded ? 'yes' : 'no'}`,
     ];
     lines.forEach((line, index) => g.fillText(line, x, y + index * 18));
+  }
+
+  private drawSignalTexture(g: CanvasRenderingContext2D, C: typeof BASE) {
+    g.save();
+
+    g.globalAlpha = 0.028;
+    g.fillStyle = C.ui;
+    for (let y = 1; y < this.screen.y; y += 4) {
+      g.fillRect(0, y, this.screen.x, 1);
+    }
+
+    g.globalAlpha = 0.022;
+    const drift = Math.floor(this.time * 13);
+    for (let i = 0; i < 72; i++) {
+      const x = (i * 137 + drift * 17) % Math.max(1, Math.floor(this.screen.x));
+      const y = (i * 71 + drift * 7) % Math.max(1, Math.floor(this.screen.y));
+      g.fillRect(x, y, 1, 1);
+    }
+
+    g.globalAlpha = 0.045;
+    g.fillStyle = C.dim;
+    g.fillRect(0, this.screen.y - 1, this.screen.x, 1);
+
+    g.restore();
   }
 
   private drawStars(g: CanvasRenderingContext2D, camera: Vec2, C: typeof BASE) {
@@ -332,7 +393,7 @@ export class AsciiRenderer {
 
   private glyph(g: CanvasRenderingContext2D, ch: string, p: Vec2, color: string, glow = false) {
     g.fillStyle = color;
-    if (glow) { g.shadowColor = color; g.shadowBlur = 7; }
+    if (glow) { g.shadowColor = color; g.shadowBlur = 2; }
     g.fillText(ch, p.x, p.y);
     if (glow) g.shadowBlur = 0;
   }
