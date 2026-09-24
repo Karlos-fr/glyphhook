@@ -6,8 +6,8 @@
   "scope": "/glyphhook/",
   "display": "fullscreen",
   "orientation": "landscape-primary",
-  "background_color": "#030609",
-  "theme_color": "#030609",
+  "background_color": "#080b0d",
+  "theme_color": "#080b0d",
   "icons": [
     {
       "src": "./icon.svg",
