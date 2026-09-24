@@ -35,6 +35,7 @@ export class GlyphhookGame extends EventTarget {
   private campaignMs = 0;
   private campaignDeaths = 0;
   private tutorialStep = 0;
+  private activeKeyboardActions = new Map<string, Action>();
 
   constructor(private canvas: HTMLCanvasElement) {
     super();
@@ -57,6 +58,7 @@ export class GlyphhookGame extends EventTarget {
     this.mode = 'paused';
     this.audio.setAmbient(false);
     this.input.clearSource('keyboard');
+    this.activeKeyboardActions.clear();
     this.input.clearSource('pointer');
     this.input.clearSource('gamepad');
     this.input.touchAnalogX = 0;
@@ -82,6 +84,7 @@ export class GlyphhookGame extends EventTarget {
     this.audio.setAmbient(false);
     this.input.clearTransient();
     this.input.clearSource('keyboard');
+    this.activeKeyboardActions.clear();
     this.input.clearSource('pointer');
     this.input.clearSource('gamepad');
     this.input.touchAnalogX = 0;
@@ -272,10 +275,10 @@ export class GlyphhookGame extends EventTarget {
     }
     const steps = [
       '1/6  MOVE  — use A/D, arrows, stick or gamepad',
-      '2/6  JUMP  — press Space / ↑ / JUMP / gamepad A',
+      '2/6  JUMP  — press Space / ↑ / Z / JUMP / gamepad A',
       '3/6  AIM  — point toward a highlighted anchor',
-      '4/6  HOLD HOOK  — the rope reels in while you swing',
-      '5/6  RELEASE  — let go while moving upward/forward',
+      '4/6  HOLD HOOK  — attach without automatic pulling',
+      '5/6  REEL  — while hooked use ↑/Z to rise, ↓/S to descend',
       '6/6  BUBBLE  — use the impulse to correct your arc',
       'TRAINING COMPLETE  — reach E when you are ready',
     ];
@@ -335,11 +338,25 @@ export class GlyphhookGame extends EventTarget {
       ['left', 'left'], ['right', 'right'], ['jump', 'jump'], ['hook', 'hook'], ['bubble', 'bubble'],
     ];
     for (const [name, action] of pairs) if (bindings[name] === code) return action;
+
     const fallback = new Map<string, Action>([
-      ['ArrowLeft', 'left'], ['ArrowRight', 'right'], ['ArrowUp', 'jump'], ['KeyZ', 'jump'],
-      ['ShiftLeft', 'hook'], ['ShiftRight', 'hook'], ['KeyW', 'in'], ['KeyS', 'out'], ['ArrowDown', 'out'],
+      ['ArrowLeft', 'left'],
+      ['ArrowRight', 'right'],
+      ['ShiftLeft', 'hook'],
+      ['ShiftRight', 'hook'],
+      ['KeyW', 'in'],
     ]);
     return fallback.get(code) ?? null;
+  }
+
+  private contextualKeyboardAction(code: string): Action | null {
+    if (code === 'ArrowUp' || code === 'KeyZ') {
+      return this.player.anchor ? 'in' : 'jump';
+    }
+    if (code === 'ArrowDown' || code === 'KeyS') {
+      return this.player.anchor ? 'out' : null;
+    }
+    return this.boundAction(code);
   }
 
   private bindInput() {
@@ -360,7 +377,11 @@ export class GlyphhookGame extends EventTarget {
         this.restartLevel();
         return;
       }
-      const action = this.boundAction(e.code);
+      let action = this.activeKeyboardActions.get(e.code) ?? null;
+      if (!action) {
+        action = this.contextualKeyboardAction(e.code);
+        if (action) this.activeKeyboardActions.set(e.code, action);
+      }
       if (action) {
         e.preventDefault();
         this.input.set(action, true, 'keyboard');
@@ -368,14 +389,18 @@ export class GlyphhookGame extends EventTarget {
     }, { passive: false });
 
     addEventListener('keyup', (e) => {
-      const action = this.boundAction(e.code);
+      const action = this.activeKeyboardActions.get(e.code) ?? this.contextualKeyboardAction(e.code);
       if (action) {
         e.preventDefault();
         this.input.set(action, false, 'keyboard');
       }
+      this.activeKeyboardActions.delete(e.code);
     }, { passive: false });
 
-    addEventListener('blur', () => this.input.clearSource('keyboard'));
+    addEventListener('blur', () => {
+      this.input.clearSource('keyboard');
+      this.activeKeyboardActions.clear();
+    });
 
     const aim = (e: PointerEvent) => {
       const r = this.canvas.getBoundingClientRect();
