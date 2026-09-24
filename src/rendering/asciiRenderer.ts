@@ -249,24 +249,38 @@ export class AsciiRenderer {
         this.glyph(g, 'O', p, selected ? C.anchorTarget : C.anchor, selected);
       }
       else if (tile === '^') {
-        const phase = settings.reducedMotion ? 0 : this.time * 3.4 + x * 0.63 + y * 0.21;
-        const wave = (Math.sin(phase) + 1) * 0.5;
-        const hot = (Math.sin(phase * 0.73 + 1.4) + 1) * 0.5;
-        const warm = mixHex(C.hazard, '#ff9a3c', 0.22 + wave * 0.46);
-        const lavaColor = mixHex(warm, '#ffd166', hot * 0.24);
-        this.glyph(g, '^', p, lavaColor, !settings.reducedMotion && wave > 0.82);
+        // A travelling heat wave: every cell stays red/orange at all times,
+        // while a brighter crest moves horizontally across the lava.
+        const phase = settings.reducedMotion ? 0 : this.time * 2.65 - x * 0.78 + y * 0.12;
+        const wave = settings.reducedMotion ? 0.28 : 0.5 - 0.5 * Math.cos(phase);
+        const crest = smoothstep(0.58, 1, wave);
+
+        const redBase = '#ff3026';
+        const orange = '#ff6a22';
+        const yellowHot = '#ffc247';
+        const body = mixHex(redBase, orange, wave * 0.62);
+        const lavaColor = mixCssColor(body, yellowHot, crest * 0.46);
+
+        this.glyph(g, '^', p, lavaColor, false);
       }
       else if (tile === '!') {
         const checkpointIndex = world.checkpoints.findIndex((cp) => dist(cp, p) < 2);
         const active = checkpointIndex >= 0 && checkpointIndex === player.checkpointIndex;
-        const pulse = settings.reducedMotion ? 0 : (Math.sin(this.time * 4.0 + 0.8) + 1) * 0.5;
-        const checkpointColor = mixHex(C.checkpoint, '#c7ffd7', (active ? 0.32 : 0.12) + pulse * 0.24);
-        this.glyph(g, '!', p, checkpointColor, active || (!settings.reducedMotion && pulse > 0.88));
+
+        // Slow visible breathing, with no on/off glow threshold.
+        const pulse = settings.reducedMotion ? 0.45 : 0.5 - 0.5 * Math.cos(this.time * 2.55 + 0.55);
+        const base = active ? '#49d87b' : C.checkpoint;
+        const checkpointColor = mixHex(base, '#d5ffe0', 0.08 + pulse * 0.62);
+
+        this.glyph(g, '!', p, checkpointColor, false);
       }
       else if (tile === 'E') {
-        const pulse = settings.reducedMotion ? 0 : (Math.sin(this.time * 3.1) + 1) * 0.5;
-        const exitColor = mixHex(C.exit, '#e3c7ff', 0.12 + pulse * 0.34);
-        this.glyph(g, 'E', p, exitColor, !settings.reducedMotion && pulse > 0.62);
+        // Continuous colour interpolation only: no glow threshold, so the
+        // transition cannot snap abruptly at the top of the pulse.
+        const pulse = settings.reducedMotion ? 0.42 : 0.5 - 0.5 * Math.cos(this.time * 2.15);
+        const exitColor = mixHex(C.exit, '#f2d8ff', 0.06 + pulse * 0.62);
+
+        this.glyph(g, 'E', p, exitColor, false);
       }
       else if (tile !== '.' && tile !== '@') this.glyph(g, tile, p, C.text);
     }
@@ -508,12 +522,13 @@ export class AsciiRenderer {
 }
 
 
-function mixHex(a: string, b: string, t: number) {
-  const clamp01 = Math.max(0, Math.min(1, t));
-  const parse = (hex: string) => {
-    const clean = hex.replace('#', '');
+type Rgb = { r: number; g: number; b: number };
+
+function parseCssColor(color: string): Rgb {
+  if (color.startsWith('#')) {
+    const clean = color.slice(1);
     const full = clean.length === 3
-      ? clean.split('').map((c) => c + c).join('')
+      ? clean.split('').map((part) => part + part).join('')
       : clean;
     const value = Number.parseInt(full, 16);
     return {
@@ -521,11 +536,33 @@ function mixHex(a: string, b: string, t: number) {
       g: (value >> 8) & 255,
       b: value & 255,
     };
-  };
-  const ca = parse(a);
-  const cb = parse(b);
-  const lerpChannel = (x: number, y: number) => Math.round(x + (y - x) * clamp01);
-  return `rgb(${lerpChannel(ca.r, cb.r)}, ${lerpChannel(ca.g, cb.g)}, ${lerpChannel(ca.b, cb.b)})`;
+  }
+
+  const match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (match) {
+    return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]) };
+  }
+
+  // Fallback to a visible red rather than black if an unsupported format
+  // ever slips through.
+  return { r: 255, g: 48, b: 38 };
+}
+
+function mixCssColor(a: string, b: string, t: number) {
+  const amount = Math.max(0, Math.min(1, t));
+  const ca = parseCssColor(a);
+  const cb = parseCssColor(b);
+  const channel = (x: number, y: number) => Math.round(x + (y - x) * amount);
+  return `rgb(${channel(ca.r, cb.r)}, ${channel(ca.g, cb.g)}, ${channel(ca.b, cb.b)})`;
+}
+
+function mixHex(a: string, b: string, t: number) {
+  return mixCssColor(a, b, t);
+}
+
+function smoothstep(edge0: number, edge1: number, value: number) {
+  const x = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return x * x * (3 - 2 * x);
 }
 
 export function formatMs(ms: number) {
