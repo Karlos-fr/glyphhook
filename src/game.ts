@@ -334,8 +334,8 @@ export class GlyphhookGame extends EventTarget {
     ];
     for (const [name, action] of pairs) if (bindings[name] === code) return action;
     const fallback = new Map<string, Action>([
-      ['ArrowLeft', 'left'], ['ArrowRight', 'right'], ['KeyZ', 'jump'],
-      ['ShiftLeft', 'hook'], ['ShiftRight', 'hook'], ['KeyW', 'in'], ['ArrowUp', 'in'], ['KeyS', 'out'], ['ArrowDown', 'out'],
+      ['ArrowLeft', 'left'], ['ArrowRight', 'right'], ['ArrowUp', 'jump'], ['KeyZ', 'jump'],
+      ['ShiftLeft', 'hook'], ['ShiftRight', 'hook'], ['KeyW', 'in'], ['KeyS', 'out'], ['ArrowDown', 'out'],
     ]);
     return fallback.get(code) ?? null;
   }
