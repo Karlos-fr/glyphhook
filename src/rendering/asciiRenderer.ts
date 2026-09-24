@@ -84,6 +84,8 @@ export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
   private dpr = 1;
   private zoom = 1;
+  private worldPixels: Vec2 = { x: 1098, y: 612 };
+  private worldOffset: Vec2 = { x: 0, y: 0 };
   screen: Vec2 = { x: 0, y: 0 };
   view: Vec2 = { x: 0, y: 0 };
   private stars: Vec2[];
@@ -101,18 +103,33 @@ export class AsciiRenderer {
     this.resize();
   }
 
+  setWorldSize(width: number, height: number) {
+    this.worldPixels = { x: width, y: height };
+    this.resize();
+  }
+
   resize() {
     const r = this.canvas.getBoundingClientRect();
     this.screen = { x: Math.max(320, r.width), y: Math.max(240, r.height) };
-    this.zoom = clampZoom(Math.min(this.screen.x / 1100, this.screen.y / 620));
+    this.zoom = Math.max(
+      0.45,
+      Math.min(this.screen.x / this.worldPixels.x, this.screen.y / this.worldPixels.y),
+    );
     this.view = { x: this.screen.x / this.zoom, y: this.screen.y / this.zoom };
+    this.worldOffset = {
+      x: Math.max(0, (this.view.x - this.worldPixels.x) / 2),
+      y: Math.max(0, (this.view.y - this.worldPixels.y) / 2),
+    };
     this.dpr = Math.min(devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(this.screen.x * this.dpr);
     this.canvas.height = Math.round(this.screen.y * this.dpr);
   }
 
   screenToView(p: Vec2): Vec2 {
-    return { x: p.x / this.zoom, y: p.y / this.zoom };
+    return {
+      x: p.x / this.zoom - this.worldOffset.x,
+      y: p.y / this.zoom - this.worldOffset.y,
+    };
   }
 
   kickShake(power: number, settings: Settings) {
@@ -184,7 +201,10 @@ export class AsciiRenderer {
 
     g.save();
     g.setTransform(this.dpr * this.zoom, 0, 0, this.dpr * this.zoom, shake.x * this.dpr, shake.y * this.dpr);
-    g.translate(-Math.round(camera.x), -Math.round(camera.y));
+    g.translate(
+      this.worldOffset.x - Math.round(camera.x),
+      this.worldOffset.y - Math.round(camera.y),
+    );
     this.drawStars(g, camera, C);
     this.drawWorld(g, world, camera, player, W);
     this.drawHookGuide(g, player, W);
@@ -323,8 +343,8 @@ export class AsciiRenderer {
   }
 
   private drawAim(g: CanvasRenderingContext2D, aim: Vec2, C: typeof BASE) {
-    const x = aim.x * this.zoom;
-    const y = aim.y * this.zoom;
+    const x = (aim.x + this.worldOffset.x) * this.zoom;
+    const y = (aim.y + this.worldOffset.y) * this.zoom;
     g.strokeStyle = C.aim;
     g.lineWidth = 1;
     g.beginPath();
@@ -442,9 +462,6 @@ export class AsciiRenderer {
   }
 }
 
-function clampZoom(v: number) {
-  return Math.max(1, Math.min(1.55, v));
-}
 
 export function formatMs(ms: number) {
   const total = Math.max(0, Math.round(ms));
