@@ -13,7 +13,8 @@ All gameplay rooms are fixed 64 × 36 cells and must fit entirely on screen.
 ## Grapple
 
 - [ ] Click/hold Hook attaches to the highlighted anchor
-- [ ] Holding Hook visibly reels the player toward the anchor
+- [ ] Holding Hook alone does not change rope length or add velocity
+- [ ] While attached, Up/Z reels in and Down/S reels out
 - [ ] Player can gain height from a standing/running attach
 - [ ] Left/right swing pumping still adds tangential speed
 - [ ] Releasing Hook preserves tangential momentum
@@ -24,7 +25,10 @@ All gameplay rooms are fixed 64 × 36 cells and must fit entirely on screen.
 ## Controls
 
 - [ ] Space jumps
-- [ ] Arrow Up jumps
+- [ ] Arrow Up jumps when not attached
+- [ ] Z jumps when not attached
+- [ ] Arrow Up/Z reel in when attached
+- [ ] Arrow Down/S reel out when attached
 - [ ] A/D and Left/Right move
 - [ ] Mouse click holds/releases Hook
 - [ ] Mobile Hook can be held before/while aiming

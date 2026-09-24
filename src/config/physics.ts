@@ -18,8 +18,6 @@ export type PhysicsConfig = {
   hookAimCone: number;
   hookAimWeight: number;
   hookDistanceWeight: number;
-  hookAttachImpulse: number;
-  hookAutoReelSpeed: number;
   ropeIterations: number;
   ropeCornerOffset: number;
   bubbleHorizontalImpulse: number;
@@ -49,8 +47,6 @@ export const PHYSICS: PhysicsConfig = {
   hookAimCone: 0.20,
   hookAimWeight: 0.88,
   hookDistanceWeight: 0.12,
-  hookAttachImpulse: 165,
-  hookAutoReelSpeed: 110,
   ropeIterations: 3,
   ropeCornerOffset: 2.2,
   bubbleHorizontalImpulse: 205,

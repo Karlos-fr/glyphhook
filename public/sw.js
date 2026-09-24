@@ -1,4 +1,4 @@
-const CACHE = 'glyphhook-v0.4.0';
+const CACHE = 'glyphhook-v0.4.1';
 const BASE = '/glyphhook/';
 const SHELL = [BASE, BASE + 'manifest.webmanifest', BASE + 'icon.svg'];
 
