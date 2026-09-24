@@ -88,11 +88,7 @@ function bindToggle(selector: string, key: keyof typeof game.save.data.settings)
   input.addEventListener('change', () => {
     game.save.data.settings[key] = input.checked;
     game.updateSettings();
-    document.addEventListener('visibilitychange', () => {
-  if (document.hidden && game.getMode() === 'playing') game.pause();
-});
-
-document.body.classList.toggle('reduced-motion', game.save.data.settings.reducedMotion);
+    document.body.classList.toggle('reduced-motion', game.save.data.settings.reducedMotion);
   });
 }
 
@@ -259,6 +255,10 @@ addEventListener('appinstalled', () => {
   showToast('GLYPHHOOK INSTALLED');
 });
 
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && game.getMode() === 'playing') game.pause();
+});
+
 document.body.classList.toggle('reduced-motion', game.save.data.settings.reducedMotion);
 refreshBindings();
 renderLevels();
@@ -277,7 +277,7 @@ if ('serviceWorker' in navigator) {
     }
 
     void navigator.serviceWorker
-      .register('./sw.js?v=0.3.1', { updateViaCache: 'none' })
+      .register('./sw.js?v=0.3.3', { updateViaCache: 'none' })
       .then((registration) => registration.update())
       .catch(() => undefined);
   });

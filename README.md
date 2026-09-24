@@ -2,6 +2,20 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.3.3 — Spectral Monitor Art Direction
+
+This pass replaces the generic neon look with a quieter, more distinctive visual language inspired by old terminals, industrial monitors and signal equipment.
+
+- Removed the duplicated in-game shortcut strip; the Movement Lab tutorial is now the only control teaching surface
+- HUD reduced to level identity, mechanic, timer, deaths, records and Bubble recovery
+- New muted ink / graphite / brass / sage / brick / dusty-violet palette
+- Glow reduced to a tiny functional accent instead of a global visual effect
+- Added subtle scanline/signal grain without a heavy VHS filter
+- Hook target preview is a restrained target ring, visually distinct from the active rope
+- Menus, settings, mobile controls, results and PWA icon now use the same spectral-monitor language
+- Fixed a settings lifecycle bug where the visibility listener could be registered repeatedly
+- PWA cache bumped to v0.3.3
+
 ## v0.3.1 — Playability & Polish
 
 This pass hardens the existing game instead of adding a new gameplay system.
