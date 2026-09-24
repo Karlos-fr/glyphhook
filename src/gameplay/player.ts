@@ -110,9 +110,6 @@ export class Player {
     if (this.anchor) {
       const tail = this.ropeTailLength();
       const minTotal = tail + P.minRopeLength;
-      if (input.has('hook') && !input.has('out')) {
-        this.ropeLength = Math.max(minTotal, this.ropeLength - P.hookAutoReelSpeed * dt);
-      }
       if (input.has('in')) this.ropeLength = Math.max(minTotal, this.ropeLength - P.reelSpeed * dt);
       if (input.has('out')) this.ropeLength = Math.min(P.hookRange + tail, this.ropeLength + P.reelSpeed * dt);
       const targetPoint = this.ropePivots[0] ?? this.anchor;
@@ -208,11 +205,6 @@ export class Player {
     this.anchor = { ...best };
     this.ropePivots = [];
     this.ropeLength = Math.max(P.minRopeLength, dist(this.pos, best));
-    const dx = best.x - this.pos.x;
-    const dy = best.y - this.pos.y;
-    const d = Math.max(1, Math.hypot(dx, dy));
-    this.vel.x += (dx / d) * P.hookAttachImpulse;
-    this.vel.y += (dy / d) * P.hookAttachImpulse;
     this.candidateAnchor = this.anchor;
     return true;
   }
