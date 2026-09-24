@@ -206,7 +206,7 @@ export class AsciiRenderer {
       this.worldOffset.y - Math.round(camera.y),
     );
     this.drawStars(g, camera, C);
-    this.drawWorld(g, world, camera, player, W);
+    this.drawWorld(g, world, camera, player, W, settings);
     this.drawHookGuide(g, player, W);
     if (settings.ghost && ghost?.length) this.drawGhost(g, ghost, runMs, W);
     this.drawTrail(g, W);
@@ -224,7 +224,14 @@ export class AsciiRenderer {
     if (clearText) this.drawCenterText(g, clearText, W.player, 22, this.screen.y * 0.5);
   }
 
-  private drawWorld(g: CanvasRenderingContext2D, world: World, camera: Vec2, player: Player, C: typeof BASE) {
+  private drawWorld(
+    g: CanvasRenderingContext2D,
+    world: World,
+    camera: Vec2,
+    player: Player,
+    C: typeof BASE,
+    settings: Settings,
+  ) {
     g.font = 'bold 20px "Courier New", ui-monospace, monospace';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
@@ -241,13 +248,26 @@ export class AsciiRenderer {
         const selected = Boolean(player.candidateAnchor && dist(player.candidateAnchor, p) < 2);
         this.glyph(g, 'O', p, selected ? C.anchorTarget : C.anchor, selected);
       }
-      else if (tile === '^') this.glyph(g, '^', p, C.hazard);
+      else if (tile === '^') {
+        const phase = settings.reducedMotion ? 0 : this.time * 3.4 + x * 0.63 + y * 0.21;
+        const wave = (Math.sin(phase) + 1) * 0.5;
+        const hot = (Math.sin(phase * 0.73 + 1.4) + 1) * 0.5;
+        const warm = mixHex(C.hazard, '#ff9a3c', 0.22 + wave * 0.46);
+        const lavaColor = mixHex(warm, '#ffd166', hot * 0.24);
+        this.glyph(g, '^', p, lavaColor, !settings.reducedMotion && wave > 0.82);
+      }
       else if (tile === '!') {
         const checkpointIndex = world.checkpoints.findIndex((cp) => dist(cp, p) < 2);
         const active = checkpointIndex >= 0 && checkpointIndex === player.checkpointIndex;
-        this.glyph(g, '!', p, C.checkpoint, active);
+        const pulse = settings.reducedMotion ? 0 : (Math.sin(this.time * 4.0 + 0.8) + 1) * 0.5;
+        const checkpointColor = mixHex(C.checkpoint, '#c7ffd7', (active ? 0.32 : 0.12) + pulse * 0.24);
+        this.glyph(g, '!', p, checkpointColor, active || (!settings.reducedMotion && pulse > 0.88));
       }
-      else if (tile === 'E') this.glyph(g, 'E', p, C.exit, true);
+      else if (tile === 'E') {
+        const pulse = settings.reducedMotion ? 0 : (Math.sin(this.time * 3.1) + 1) * 0.5;
+        const exitColor = mixHex(C.exit, '#e3c7ff', 0.12 + pulse * 0.34);
+        this.glyph(g, 'E', p, exitColor, !settings.reducedMotion && pulse > 0.62);
+      }
       else if (tile !== '.' && tile !== '@') this.glyph(g, tile, p, C.text);
     }
   }
@@ -487,6 +507,26 @@ export class AsciiRenderer {
   }
 }
 
+
+function mixHex(a: string, b: string, t: number) {
+  const clamp01 = Math.max(0, Math.min(1, t));
+  const parse = (hex: string) => {
+    const clean = hex.replace('#', '');
+    const full = clean.length === 3
+      ? clean.split('').map((c) => c + c).join('')
+      : clean;
+    const value = Number.parseInt(full, 16);
+    return {
+      r: (value >> 16) & 255,
+      g: (value >> 8) & 255,
+      b: value & 255,
+    };
+  };
+  const ca = parse(a);
+  const cb = parse(b);
+  const lerpChannel = (x: number, y: number) => Math.round(x + (y - x) * clamp01);
+  return `rgb(${lerpChannel(ca.r, cb.r)}, ${lerpChannel(ca.g, cb.g)}, ${lerpChannel(ca.b, cb.b)})`;
+}
 
 export function formatMs(ms: number) {
   const total = Math.max(0, Math.round(ms));
