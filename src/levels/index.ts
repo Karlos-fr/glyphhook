@@ -101,7 +101,7 @@ export const LEVELS: LevelDef[] = [
       lava(g, 14, 20);
       lava(g, 32, 37);
       lava(g, 46, 51);
-      anchor(g, 25, 13);
+      anchor(g, 23, 14);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
       put(g, 60, 28, 'E');
@@ -118,7 +118,7 @@ export const LEVELS: LevelDef[] = [
       platform(g, 38, 42, 22, 2);
       platform(g, 50, 62, 28, 2);
       lava(g, 13, 49);
-      anchor(g, 26, 12);
+      anchor(g, 24, 13);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
       put(g, 60, 27, 'E');
