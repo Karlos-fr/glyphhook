@@ -92,6 +92,13 @@ button, input { font: inherit; }
 }
 .menu-help { margin: 22px 0 0; letter-spacing: 0; line-height: 1.55; }
 .gamepad-help { margin-top: 5px; }
+.build-tag {
+  margin: 18px 0 -4px;
+  text-align: center;
+  color: #505961;
+  font-size: 9px;
+  letter-spacing: .08em;
+}
 
 .menu-buttons { display: grid; gap: 8px; margin-top: 28px; }
 
