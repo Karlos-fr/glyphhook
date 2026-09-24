@@ -42,7 +42,7 @@ All gameplay rooms are fixed 64 × 36 cells and must fit entirely on screen.
 - [ ] 02 First Swing — Hook lifts the player onto the central platform
 - [ ] 03 Release — Hook + release reaches the landing route
 - [ ] 04 Transfer — consecutive anchors are chainable
-- [ ] 05 Bubble — gaps are solvable with jump + Bubble
+- [ ] 05 Bubble — every gap is solvable with jump alone; Bubble is optional trajectory correction
 - [ ] 06 Combo — Hook and Bubble can be combined
 - [ ] 07 Needle — narrow landings are reachable
 - [ ] 08 Ascent — vertical chain can be completed with active reeling
