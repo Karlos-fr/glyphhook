@@ -2,6 +2,13 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.4.3 — Smooth Glyph Waves
+
+- Checkpoint `!` now has a clearly visible continuous green breathing pulse
+- Exit `E` now fades continuously in violet with no abrupt glow threshold
+- Lava `^` stays red/orange at all times and uses a horizontal travelling heat-wave crest
+- Fixed the color interpolation bug that could turn lava dark/black during chained blends
+
 ## v0.4.2 — Living Glyphs & AZERTY Fix
 
 - Fixed the `Z` shortcut on AZERTY keyboards by using the typed character instead of only the physical key code
