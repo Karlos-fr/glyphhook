@@ -2,6 +2,19 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.4.0 — Single-screen 16:9 Rooms
+
+The campaign has been rebuilt around the actual grapple physics instead of long scrolling test corridors.
+
+- Every level is exactly 64 × 36 logical cells (1152 × 648 at 18 px/cell), i.e. a true 16:9 room
+- The whole room is always fitted and centered in the viewport; there is no gameplay scrolling
+- All ten rooms have been redesigned around run-up, jump, active grapple lift, swing, release, transfer and Bubble correction
+- Holding Hook now automatically reels the rope in and gives a small attach impulse, so the grapple can genuinely lift the player
+- Early grapple levels have comfortable starting-anchor range instead of edge-of-range placements
+- Level validation now rejects rooms whose first anchor cannot be reached from spawn
+- World rendering still uses real text glyphs; glyphs are packed more tightly inside each logical cell to match the reference video's dense ASCII look
+- Rope rendering uses short text segments again rather than a smooth vector line
+
 ## v0.3.4 — Gameplay Corrections
 
 - Restored the original gameplay/level colors; the spectral art direction now applies to UI and menus only

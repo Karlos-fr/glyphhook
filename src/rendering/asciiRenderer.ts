@@ -84,6 +84,8 @@ export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
   private dpr = 1;
   private zoom = 1;
+  private worldPixels: Vec2 = { x: 1152, y: 648 };
+  private worldOffset: Vec2 = { x: 0, y: 0 };
   screen: Vec2 = { x: 0, y: 0 };
   view: Vec2 = { x: 0, y: 0 };
   private stars: Vec2[];
@@ -101,18 +103,33 @@ export class AsciiRenderer {
     this.resize();
   }
 
+  setWorldSize(width: number, height: number) {
+    this.worldPixels = { x: width, y: height };
+    this.resize();
+  }
+
   resize() {
     const r = this.canvas.getBoundingClientRect();
     this.screen = { x: Math.max(320, r.width), y: Math.max(240, r.height) };
-    this.zoom = clampZoom(Math.min(this.screen.x / 1100, this.screen.y / 620));
+    this.zoom = Math.min(
+      this.screen.x / this.worldPixels.x,
+      this.screen.y / this.worldPixels.y,
+    );
     this.view = { x: this.screen.x / this.zoom, y: this.screen.y / this.zoom };
+    this.worldOffset = {
+      x: Math.max(0, (this.view.x - this.worldPixels.x) / 2),
+      y: Math.max(0, (this.view.y - this.worldPixels.y) / 2),
+    };
     this.dpr = Math.min(devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(this.screen.x * this.dpr);
     this.canvas.height = Math.round(this.screen.y * this.dpr);
   }
 
   screenToView(p: Vec2): Vec2 {
-    return { x: p.x / this.zoom, y: p.y / this.zoom };
+    return {
+      x: p.x / this.zoom - this.worldOffset.x,
+      y: p.y / this.zoom - this.worldOffset.y,
+    };
   }
 
   kickShake(power: number, settings: Settings) {
@@ -184,7 +201,10 @@ export class AsciiRenderer {
 
     g.save();
     g.setTransform(this.dpr * this.zoom, 0, 0, this.dpr * this.zoom, shake.x * this.dpr, shake.y * this.dpr);
-    g.translate(-Math.round(camera.x), -Math.round(camera.y));
+    g.translate(
+      this.worldOffset.x - Math.round(camera.x),
+      this.worldOffset.y - Math.round(camera.y),
+    );
     this.drawStars(g, camera, C);
     this.drawWorld(g, world, camera, player, W);
     this.drawHookGuide(g, player, W);
@@ -205,7 +225,7 @@ export class AsciiRenderer {
   }
 
   private drawWorld(g: CanvasRenderingContext2D, world: World, camera: Vec2, player: Player, C: typeof BASE) {
-    g.font = `bold ${P.cell}px ui-monospace,Menlo,Consolas,monospace`;
+    g.font = 'bold 20px "Courier New", ui-monospace, monospace';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     const x0 = Math.max(0, Math.floor(camera.x / P.cell) - 1);
@@ -219,13 +239,13 @@ export class AsciiRenderer {
       if (tile === '#') this.glyph(g, '#', p, (x + y) % 2 ? C.wall : C.wall2);
       else if (tile === 'o') {
         const selected = Boolean(player.candidateAnchor && dist(player.candidateAnchor, p) < 2);
-        this.glyph(g, selected ? '◎' : 'O', p, selected ? C.anchorTarget : C.anchor, selected);
+        this.glyph(g, 'O', p, selected ? C.anchorTarget : C.anchor, selected);
       }
       else if (tile === '^') this.glyph(g, '^', p, C.hazard);
       else if (tile === '!') {
         const checkpointIndex = world.checkpoints.findIndex((cp) => dist(cp, p) < 2);
         const active = checkpointIndex >= 0 && checkpointIndex === player.checkpointIndex;
-        this.glyph(g, active ? '✓' : '!', p, C.checkpoint, active);
+        this.glyph(g, '!', p, C.checkpoint, active);
       }
       else if (tile === 'E') this.glyph(g, 'E', p, C.exit, true);
       else if (tile !== '.' && tile !== '@') this.glyph(g, tile, p, C.text);
@@ -258,17 +278,21 @@ export class AsciiRenderer {
   private drawRope(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
     if (!player.anchor) return;
     const points = [player.pos, ...player.ropePoints];
-    g.font = '11px monospace';
+    g.save();
+    g.font = 'bold 11px "Courier New", monospace';
     g.fillStyle = C.rope;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
     for (let s = 0; s < points.length - 1; s++) {
       const a = points[s], b = points[s + 1];
-      const n = Math.max(2, Math.floor(dist(a, b) / 9));
+      const n = Math.max(2, Math.floor(dist(a, b) / 7));
       for (let i = 1; i < n; i++) {
         const t = i / n;
-        g.fillText((i + s) % 2 ? '·' : '-', lerp(a.x, b.x, t), lerp(a.y, b.y, t));
+        g.fillText(i % 2 ? '·' : '-', lerp(a.x, b.x, t), lerp(a.y, b.y, t));
       }
     }
-    for (const pivot of player.ropePivots) this.glyph(g, '+', pivot, C.rope, true);
+    g.restore();
+    for (const pivot of player.ropePivots) this.glyph(g, '+', pivot, C.rope, false);
   }
 
   private drawTrail(g: CanvasRenderingContext2D, C: typeof BASE) {
@@ -305,8 +329,7 @@ export class AsciiRenderer {
 
   private drawPlayer(g: CanvasRenderingContext2D, player: Player, C: typeof BASE) {
     const bob = player.grounded ? 0 : Math.sin(this.time * 18) * 0.5;
-    const glyph = player.anchor ? '@' : player.speed > P.highSpeedTrail ? '＠' : '@';
-    this.glyph(g, glyph, { x: player.pos.x, y: player.pos.y + bob }, C.player, true);
+    this.glyph(g, '@', { x: player.pos.x, y: player.pos.y + bob }, C.player, true);
   }
 
   private drawGhost(g: CanvasRenderingContext2D, ghost: GhostPoint[], runMs: number, C: typeof BASE) {
@@ -323,8 +346,8 @@ export class AsciiRenderer {
   }
 
   private drawAim(g: CanvasRenderingContext2D, aim: Vec2, C: typeof BASE) {
-    const x = aim.x * this.zoom;
-    const y = aim.y * this.zoom;
+    const x = (aim.x + this.worldOffset.x) * this.zoom;
+    const y = (aim.y + this.worldOffset.y) * this.zoom;
     g.strokeStyle = C.aim;
     g.lineWidth = 1;
     g.beginPath();
@@ -429,10 +452,32 @@ export class AsciiRenderer {
   }
 
   private glyph(g: CanvasRenderingContext2D, ch: string, p: Vec2, color: string, glow = false) {
+    g.save();
+    g.translate(Math.round(p.x), Math.round(p.y));
+
+    // The reference uses real monospace characters packed much tighter than
+    // a browser's default glyph advance. Keep true text glyphs, but widen
+    // them visually inside the 18px logical cell so repeated # characters
+    // read as a dense wall instead of separated symbols.
+    const scaleX =
+      ch === '#' ? 1.48 :
+      ch === '^' ? 1.38 :
+      ch === '@' ? 1.28 :
+      1.24;
+
+    g.scale(scaleX, 1);
     g.fillStyle = color;
-    if (glow) { g.shadowColor = color; g.shadowBlur = 2; }
-    g.fillText(ch, p.x, p.y);
-    if (glow) g.shadowBlur = 0;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = 'bold 20px "Courier New", ui-monospace, monospace';
+
+    if (glow) {
+      g.shadowColor = color;
+      g.shadowBlur = 4;
+    }
+
+    g.fillText(ch, 0, 0);
+    g.restore();
   }
 
   private makeStars() {
@@ -442,9 +487,6 @@ export class AsciiRenderer {
   }
 }
 
-function clampZoom(v: number) {
-  return Math.max(1, Math.min(1.55, v));
-}
 
 export function formatMs(ms: number) {
   const total = Math.max(0, Math.round(ms));
