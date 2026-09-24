@@ -270,7 +270,7 @@ export class GlyphhookGame extends EventTarget {
     }
     const steps = [
       '1/6  MOVE  — use A/D, arrows, stick or gamepad',
-      '2/6  JUMP  — press Space / JUMP / gamepad A',
+      '2/6  JUMP  — press Space / ↑ / JUMP / gamepad A',
       '3/6  AIM  — point toward a highlighted anchor',
       '4/6  HOLD HOOK  — keep it held and start swinging',
       '5/6  RELEASE  — let go while moving upward/forward',
@@ -334,8 +334,8 @@ export class GlyphhookGame extends EventTarget {
     ];
     for (const [name, action] of pairs) if (bindings[name] === code) return action;
     const fallback = new Map<string, Action>([
-      ['ArrowLeft', 'left'], ['ArrowRight', 'right'], ['KeyZ', 'jump'],
-      ['ShiftLeft', 'hook'], ['ShiftRight', 'hook'], ['KeyW', 'in'], ['ArrowUp', 'in'], ['KeyS', 'out'], ['ArrowDown', 'out'],
+      ['ArrowLeft', 'left'], ['ArrowRight', 'right'], ['ArrowUp', 'jump'], ['KeyZ', 'jump'],
+      ['ShiftLeft', 'hook'], ['ShiftRight', 'hook'], ['KeyW', 'in'], ['KeyS', 'out'], ['ArrowDown', 'out'],
     ]);
     return fallback.get(code) ?? null;
   }
