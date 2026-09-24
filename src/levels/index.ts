@@ -1,5 +1,5 @@
-export const LEVEL_WIDTH = 61;
-export const LEVEL_HEIGHT = 34;
+export const LEVEL_WIDTH = 64;
+export const LEVEL_HEIGHT = 36;
 
 export type LevelDef = {
   id: string;
