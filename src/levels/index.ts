@@ -150,11 +150,15 @@ export const LEVELS: LevelDef[] = [
     mechanic: 'BUBBLE',
     parMs: 20000,
     rows: room((g) => {
+      // Bubble is a correction tool here, not a requirement to compensate
+      // for impossible jump geometry. Each platform-to-platform jump stays
+      // inside the current jump envelope with comfortable margin.
       platform(g, 1, 12, 29, 2);
-      platform(g, 22, 28, 26, 2);
-      platform(g, 39, 45, 24, 2);
-      platform(g, 52, 62, 29, 2);
-      lava(g, 13, 51);
+      platform(g, 19, 25, 27, 2);
+      platform(g, 32, 38, 25, 2);
+      platform(g, 45, 51, 27, 2);
+      platform(g, 57, 62, 29, 2);
+      lava(g, 13, 56);
       put(g, 6, 28, '@');
       put(g, 9, 28, '!');
       put(g, 60, 28, 'E');
