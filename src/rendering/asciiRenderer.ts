@@ -84,7 +84,7 @@ export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
   private dpr = 1;
   private zoom = 1;
-  private worldPixels: Vec2 = { x: 1098, y: 612 };
+  private worldPixels: Vec2 = { x: 1152, y: 648 };
   private worldOffset: Vec2 = { x: 0, y: 0 };
   screen: Vec2 = { x: 0, y: 0 };
   view: Vec2 = { x: 0, y: 0 };
