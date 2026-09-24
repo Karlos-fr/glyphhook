@@ -2,6 +2,13 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.3.4 — Gameplay Corrections
+
+- Restored the original gameplay/level colors; the spectral art direction now applies to UI and menus only
+- Added `Arrow Up` as an alternate jump key
+- Reworked Runway's first lava sequence so every jump is within the current physics envelope
+- Verified FIRST LINE's first grapple anchor is within range and has direct line of sight
+
 ## v0.3.3 — Spectral Monitor Art Direction
 
 This pass replaces the generic neon look with a quieter, more distinctive visual language inspired by old terminals, industrial monitors and signal equipment.
@@ -62,7 +69,7 @@ Glyphhook uses a deterministic 120 Hz custom physics loop. The v0.3 pass focuses
 Defaults are rebindable in Settings.
 
 - `A` / `D`: move / pump swing
-- `Space`: jump
+- `Space` or `↑`: jump
 - Hold `X` or left mouse: hook toward highlighted anchor
 - `W` / `S`: reel rope in/out
 - `C`: bubble
