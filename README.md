@@ -2,6 +2,14 @@
 
 A minimalist ASCII-style web platformer focused on momentum, grappling, and precise movement.
 
+## v0.4.1 — Manual Grapple Reeling
+
+- `Z` is always available as a jump key while not attached
+- `↑` or `Z` reels the rope in while attached
+- `↓` or `S` lets the rope out while attached
+- Hook attachment no longer adds any automatic pull or velocity impulse
+- Holding Hook alone keeps the current rope length; vertical movement is fully player-controlled
+
 ## v0.4.0 — Single-screen 16:9 Rooms
 
 The campaign has been rebuilt around the actual grapple physics instead of long scrolling test corridors.
@@ -9,7 +17,7 @@ The campaign has been rebuilt around the actual grapple physics instead of long 
 - Every level is exactly 64 × 36 logical cells (1152 × 648 at 18 px/cell), i.e. a true 16:9 room
 - The whole room is always fitted and centered in the viewport; there is no gameplay scrolling
 - All ten rooms have been redesigned around run-up, jump, active grapple lift, swing, release, transfer and Bubble correction
-- Holding Hook now automatically reels the rope in and gives a small attach impulse, so the grapple can genuinely lift the player
+- Grapple height is controlled manually by reeling the rope in/out
 - Early grapple levels have comfortable starting-anchor range instead of edge-of-range placements
 - Level validation now rejects rooms whose first anchor cannot be reached from spawn
 - World rendering still uses real text glyphs; glyphs are packed more tightly inside each logical cell to match the reference video's dense ASCII look
@@ -82,9 +90,9 @@ Glyphhook uses a deterministic 120 Hz custom physics loop. The v0.3 pass focuses
 Defaults are rebindable in Settings.
 
 - `A` / `D`: move / pump swing
-- `Space` or `↑`: jump
+- `Space`, `↑`, or `Z`: jump when not attached
 - Hold `X` or left mouse: hook toward highlighted anchor
-- `W` / `S`: reel rope in/out
+- While attached: `↑` / `Z` / `W` reel in; `↓` / `S` reel out
 - `C`: bubble
 - `R`: restart current level
 - `Esc`: pause/resume
