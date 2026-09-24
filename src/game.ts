@@ -245,7 +245,7 @@ export class GlyphhookGame extends EventTarget {
   }
 
   private updateTutorial(ev: { jumped: boolean; hooked: boolean; released: boolean; bubbled: boolean }) {
-    if (!this.world.def.training || this.tutorialStep >= 6) return;
+    if (!this.world.def.training || this.tutorialStep >= 7) return;
 
     let advance = false;
     if (this.tutorialStep === 0) {
@@ -257,8 +257,10 @@ export class GlyphhookGame extends EventTarget {
     } else if (this.tutorialStep === 3) {
       advance = ev.hooked;
     } else if (this.tutorialStep === 4) {
-      advance = ev.released;
+      advance = this.player.anchor !== null && (this.input.has('in') || this.input.has('out'));
     } else if (this.tutorialStep === 5) {
+      advance = ev.released;
+    } else if (this.tutorialStep === 6) {
       advance = ev.bubbled;
     }
 
@@ -274,12 +276,13 @@ export class GlyphhookGame extends EventTarget {
       return;
     }
     const steps = [
-      '1/6  MOVE  — use A/D, arrows, stick or gamepad',
-      '2/6  JUMP  — press Space / ↑ / Z / JUMP / gamepad A',
-      '3/6  AIM  — point toward a highlighted anchor',
-      '4/6  HOLD HOOK  — attach without automatic pulling',
-      '5/6  REEL  — while hooked use ↑/Z to rise, ↓/S to descend',
-      '6/6  BUBBLE  — use the impulse to correct your arc',
+      '1/7  MOVE  — use A/D, arrows, stick or gamepad',
+      '2/7  JUMP  — press Space / ↑ / Z / JUMP / gamepad A',
+      '3/7  AIM  — point toward a highlighted anchor',
+      '4/7  HOLD HOOK  — attach; rope length stays fixed',
+      '5/7  REEL  — while hooked use ↑/Z to rise, ↓/S to descend',
+      '6/7  RELEASE  — let go and keep your momentum',
+      '7/7  BUBBLE  — use the impulse to correct your arc',
       'TRAINING COMPLETE  — reach E when you are ready',
     ];
     this.dispatchEvent(new CustomEvent('tutorial', {
